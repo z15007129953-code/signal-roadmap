@@ -1,0 +1,82 @@
+:root {
+  color-scheme: light dark;
+
+  /* Paper, ink, and the rare persimmon signal. */
+  --color-canvas: oklch(0.975 0.012 82);
+  --color-surface: oklch(0.992 0.008 82);
+  --color-surface-raised: oklch(0.999 0.004 82);
+  --color-surface-muted: oklch(0.945 0.018 82);
+  --color-text: oklch(0.235 0.022 48);
+  --color-text-muted: oklch(0.47 0.024 54);
+  --color-border: oklch(0.825 0.024 72);
+  --color-accent: oklch(0.65 0.185 38);
+  --color-accent-contrast: oklch(0.985 0.01 82);
+  --color-focus: oklch(0.5 0.17 245);
+  --color-danger: oklch(0.56 0.19 25);
+
+  /* Status color always accompanies a readable label and non-color cue. */
+  --status-under-review: oklch(0.56 0.12 255);
+  --status-planned: oklch(0.55 0.14 305);
+  --status-in-progress: oklch(0.67 0.14 73);
+  --status-completed: oklch(0.53 0.13 155);
+  --status-closed: oklch(0.5 0.035 62);
+
+  --font-body: var(--font-geist-sans), "Segoe UI", sans-serif;
+  --font-display: Charter, "Bitstream Charter", Georgia, serif;
+  --font-code: var(--font-geist-mono), "SFMono-Regular", Consolas, monospace;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.5625rem;
+  --font-size-2xl: 1.953rem;
+  --line-height-tight: 1.2;
+  --line-height-body: 1.6;
+
+  /* A 4pt foundation with semantic names. */
+  --space-2xs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+  --space-4xl: 6rem;
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-round: 999px;
+  --shadow-sm: 0 1px 2px oklch(0.28 0.025 48 / 0.08);
+  --shadow-md: 0 8px 24px oklch(0.28 0.025 48 / 0.1);
+
+  --motion-fast: 120ms;
+  --motion-standard: 200ms;
+  --motion-slow: 360ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-canvas: oklch(0.19 0.016 62);
+    --color-surface: oklch(0.225 0.018 62);
+    --color-surface-raised: oklch(0.265 0.02 62);
+    --color-surface-muted: oklch(0.285 0.022 62);
+    --color-text: oklch(0.92 0.018 80);
+    --color-text-muted: oklch(0.73 0.025 75);
+    --color-border: oklch(0.39 0.028 65);
+    --color-accent: oklch(0.72 0.16 40);
+    --color-accent-contrast: oklch(0.205 0.02 50);
+    --color-focus: oklch(0.75 0.13 240);
+    --color-danger: oklch(0.72 0.15 28);
+    --status-under-review: oklch(0.73 0.1 250);
+    --status-planned: oklch(0.74 0.11 305);
+    --status-in-progress: oklch(0.78 0.12 78);
+    --status-completed: oklch(0.72 0.11 155);
+    --status-closed: oklch(0.7 0.035 70);
+    --shadow-sm: 0 1px 2px oklch(0.08 0.01 60 / 0.3);
+    --shadow-md: 0 8px 24px oklch(0.08 0.01 60 / 0.36);
+  }
+}

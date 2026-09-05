@@ -1,26 +1,83 @@
 @import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@import "../styles/tokens.css";
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--color-canvas);
+  --color-foreground: var(--color-text);
+  --color-panel: var(--color-surface);
+  --color-panel-raised: var(--color-surface-raised);
+  --color-panel-muted: var(--color-surface-muted);
+  --color-muted: var(--color-text-muted);
+  --color-rule: var(--color-border);
+  --color-action: var(--color-accent);
+  --color-ring: var(--color-focus);
+  --color-critical: var(--color-danger);
+  --font-sans: var(--font-body);
+  --font-serif: var(--font-display);
+  --font-mono: var(--font-code);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  border-color: var(--color-border);
+}
+
+html {
+  min-width: 20rem;
+  background: var(--color-canvas);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  background: var(--color-canvas);
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-body);
+}
+
+::selection {
+  background: color-mix(in oklch, var(--color-accent) 28%, transparent);
+  color: var(--color-text);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+a,
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+  text-underline-offset: 0.18em;
+}
+
+button,
+[type="button"],
+[type="submit"] {
+  touch-action: manipulation;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
 }
