@@ -1,4 +1,5 @@
 import "server-only";
+import { withDiagnostics } from "./security/diagnostics";
 import { createModerationRepository } from "@/features/feedback/moderation-repository";
 import { createModerationService } from "@/features/feedback/moderation-service";
 import { loadFeedbackContext } from "./feedback-runtime";
@@ -15,17 +16,19 @@ export async function handleModerationRequest(
   slug: string,
   feedbackId: string,
 ) {
-  try {
-    return await createModerationHandler({
-      appUrl: getEnv().APP_URL,
-      loadContext: async (slug) => {
-        const context = await loadFeedbackContext(slug);
-        return context.ok
-          ? ok({ ...context.value, moderation: moderationService() })
-          : context;
-      },
-    })(request, slug, feedbackId);
-  } catch {
-    return feedbackUnavailable();
-  }
+  return withDiagnostics(request, async () => {
+    try {
+      return await createModerationHandler({
+        appUrl: getEnv().APP_URL,
+        loadContext: async (slug) => {
+          const context = await loadFeedbackContext(slug);
+          return context.ok
+            ? ok({ ...context.value, moderation: moderationService() })
+            : context;
+        },
+      })(request, slug, feedbackId);
+    } catch {
+      return feedbackUnavailable();
+    }
+  });
 }

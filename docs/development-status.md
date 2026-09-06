@@ -22,7 +22,7 @@ has been published. Release each completed product publicly; use Chrome for logi
   with greater privileges.
 - Demo creation, signed HTTP-only cookies, persisted member/moderator switching,
   and cleanup interfaces. Creation atomically adds a workspace, both personas,
-  and one starter board. Cleanup processes at most 100 expired demos and excludes
+  and the complete seeded journey (including the starter ideas board). Cleanup processes at most 100 expired demos and excludes
   showcase workspaces and workspaces with any active session.
 
 ## Feedback submission and discovery
@@ -220,9 +220,9 @@ in production. Invalid credentials fail closed.
 only a deletion count. The local `demo:cleanup` command performs the same single
 batch; repeat for a backlog. No scheduler or paid resource has been configured.
 Database/configuration failures return a generic 503 without credential details.
-Rate limits and the remaining write quotas are still required before exposing
-these endpoints publicly. Feedback creation now enforces its 30-item demo quota;
-comment and ten-entry changelog quotas are enforced; request-rate enforcement remains.
+Feedback creation enforces its 30-item demo quota; comment and ten-entry changelog
+quotas are also enforced. Request-rate controls are now implemented and undergoing
+the final quality review described in the continuation section below.
 
 PostgreSQL 17.11 was checksum-verified and built into ignored `.local/postgres`,
 without global installation. Two password-protected clusters listen only on
@@ -288,3 +288,38 @@ After the foundation and feedback suites, run engagement tests separately:
 ENGAGEMENT_DATABASE_TEST=1 node --env-file=.env.local node_modules/vitest/vitest.mjs run src/test/engagement-database.test.ts
 node scripts/verify-persisted-engagement.mjs
 ```
+
+# September 6 continuation
+
+Task 11 is complete (`8c32af2`): canonical and isolated demos contain 3 boards,
+6 tags, 18 published and 3 pending suggestions, 24 comments, and 3 published
+releases. Original fictional content covers every status and a mergeable pair.
+Canonical seed and two guarded transactional resets succeeded locally. The
+dedicated fixture database suite passed 4 tests; foundation passed 17. Both
+independent specification and quality reviews approved the changes.
+
+Task 12 is verified locally: bounded development and fail-closed Upstash rate limits,
+signed-demo aggregate buckets, CSP nonces, safe request diagnostics, and error
+recovery passed independent specification and quality reviews. The latest
+unit run passed 314 tests (59 opt-in database tests skipped), typecheck/lint/
+format passed, and the webpack production build passed. With security headers
+enabled, persisted release and settings browser scripts each passed 4 grouped
+checks. Settings scans cover 390, 768, and 1440 pixels with axe and overflow checks.
+Security review corrections include quota enforcement on document/RSC reads,
+safe server-page exception containment with a correlated recovery reference,
+focused comment/release errors, and standalone HTML recovery for denied pages.
+The security browser script passed five grouped checks, including Auth.js sign-in
+rendering, CSP compatibility, and matching API/header diagnostic IDs.
+Actual SDK signing now forces path-style R2 addressing so the upload URL matches
+the exact CSP origin; the compatibility regression passes without live secrets.
+
+Task 13 is in progress. The main persisted browser journey passed on the isolated
+port-3200 test app, including vote union, retained merge attribution/redirect,
+publication, and the follower's notification. Public responsive/axe tests passed
+at 390, 768, and 1440 pixels. Admin accessibility/keyboard coverage is still pending.
+
+Do not publish yet: formal end-to-end suite, production Redis/SMTP/R2 validation,
+upload lifecycle safeguards, release documentation, CI, and deployment remain.
+The production limiter rejects requests when Redis is absent or unavailable.
+Outside Vercel, anonymous callers share a conservative bucket; forwarding
+headers are not trusted. No repository has been pushed and no app deployed.

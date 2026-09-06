@@ -7,7 +7,8 @@ import {
 } from "@/components/feedback/workspace-shell";
 import { SettingsPanel } from "@/components/settings/settings-panel";
 export const dynamic = "force-dynamic";
-export default async function SettingsPage({
+export default safePage(SettingsPage);
+async function SettingsPage({
   params,
   searchParams,
 }: PageProps<"/[workspace]/admin/settings">) {
@@ -42,3 +43,4 @@ export default async function SettingsPage({
     </WorkspaceShell>
   );
 }
+import { safePage } from "@/lib/security/render-boundary";

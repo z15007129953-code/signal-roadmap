@@ -72,6 +72,7 @@ it("retains a release draft when saving fails", async () => {
   );
   await userEvent.click(screen.getByRole("button", { name: "Save draft" }));
   expect(screen.getByRole("alert")).toHaveTextContent("connection");
+  expect(screen.getByRole("alert")).toHaveFocus();
   expect(screen.getByLabelText("Release notes", { exact: true })).toHaveValue(
     "A useful improvement is ready.",
   );

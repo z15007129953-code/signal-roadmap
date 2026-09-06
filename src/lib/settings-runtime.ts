@@ -1,4 +1,5 @@
 import "server-only";
+import { withDiagnostics } from "./security/diagnostics";
 import { createSettingsService } from "@/features/settings/settings-service";
 import { createSettingsRepository } from "@/features/settings/settings-repository";
 import { getDatabase } from "./db";
@@ -22,12 +23,14 @@ export async function handleSettingsRequest(
   slug: string,
   id?: string,
 ) {
-  try {
-    return await createSettingsHandler({
-      appUrl: getEnv().APP_URL,
-      loadContext: loadSettingsContext,
-    })(action, request, slug, id);
-  } catch {
-    return feedbackUnavailable();
-  }
+  return withDiagnostics(request, async () => {
+    try {
+      return await createSettingsHandler({
+        appUrl: getEnv().APP_URL,
+        loadContext: loadSettingsContext,
+      })(action, request, slug, id);
+    } catch {
+      return feedbackUnavailable();
+    }
+  });
 }

@@ -11,9 +11,17 @@ import { moderationService } from "@/lib/moderation-runtime";
 import type { FeedbackContext } from "@/lib/feedback-context";
 
 vi.mock("@/lib/feedback-runtime", () => ({ loadFeedbackContext: vi.fn() }));
+vi.mock("server-only", () => ({}));
+vi.mock("next/headers", () => ({
+  headers: async () => new Headers({ "x-request-id": "page-test-1234" }),
+}));
 vi.mock("@/lib/engagement-runtime", () => ({ engagementServices: vi.fn() }));
 vi.mock("@/lib/moderation-runtime", () => ({ moderationService: vi.fn() }));
 vi.mock("next/navigation", () => ({
+  unstable_rethrow: (error: unknown) => {
+    if (error instanceof Error && /^(NOT_FOUND|REDIRECT:)/.test(error.message))
+      throw error;
+  },
   useRouter: () => ({ refresh: vi.fn() }),
   notFound: () => {
     throw new Error("NOT_FOUND");

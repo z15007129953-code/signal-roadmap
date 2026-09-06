@@ -6,7 +6,8 @@ import {
 } from "@/components/feedback/workspace-shell";
 import { ModerationQueue } from "@/components/moderation/moderation-queue";
 export const dynamic = "force-dynamic";
-export default async function ModerationPage({
+export default safePage(ModerationPage);
+async function ModerationPage({
   params,
   searchParams,
 }: PageProps<"/[workspace]/admin/moderation">) {
@@ -30,3 +31,4 @@ export default async function ModerationPage({
     </WorkspaceShell>
   );
 }
+import { safePage } from "@/lib/security/render-boundary";

@@ -7,7 +7,8 @@ import {
 } from "@/components/feedback/workspace-shell";
 import { NotificationInbox } from "@/components/notifications/notification-inbox";
 export const dynamic = "force-dynamic";
-export default async function NotificationsPage({
+export default safePage(NotificationsPage);
+async function NotificationsPage({
   params,
 }: PageProps<"/[workspace]/notifications">) {
   const { workspace: slug } = await params;
@@ -36,3 +37,4 @@ export default async function NotificationsPage({
     </WorkspaceShell>
   );
 }
+import { safePage } from "@/lib/security/render-boundary";

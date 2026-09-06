@@ -8,7 +8,8 @@ import {
 import { ChangelogList } from "@/components/roadmap/changelog-views";
 import { ChangelogEditor } from "@/components/roadmap/changelog-editor";
 export const dynamic = "force-dynamic";
-export default async function ReleaseAdminPage({
+export default safePage(ReleaseAdminPage);
+async function ReleaseAdminPage({
   params,
   searchParams,
 }: PageProps<"/[workspace]/admin/changelog">) {
@@ -64,3 +65,4 @@ export default async function ReleaseAdminPage({
     </WorkspaceShell>
   );
 }
+import { safePage } from "@/lib/security/render-boundary";

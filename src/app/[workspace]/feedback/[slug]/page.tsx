@@ -14,7 +14,8 @@ import { ModerationPanel } from "@/components/moderation/moderation-panel";
 import { MergedHistory } from "@/components/moderation/merged-history";
 
 export const dynamic = "force-dynamic";
-export default async function FeedbackDetailPage({
+export default safePage(FeedbackDetailPage);
+async function FeedbackDetailPage({
   params,
   searchParams,
 }: PageProps<"/[workspace]/feedback/[slug]">) {
@@ -122,3 +123,4 @@ export default async function FeedbackDetailPage({
     </WorkspaceShell>
   );
 }
+import { safePage } from "@/lib/security/render-boundary";

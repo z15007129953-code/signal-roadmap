@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type {
   ChangelogItem,
@@ -28,6 +28,10 @@ export function ChangelogEditor({
   const [dirty, setDirty] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [error, setError] = useState("");
+  const errorSummary = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (error) errorSummary.current?.focus();
+  }, [error]);
   const [notice, setNotice] = useState("");
   const [query, setQuery] = useState("");
   const [choices, setChoices] = useState(() => [
@@ -322,7 +326,12 @@ export function ChangelogEditor({
         </div>
       )}
       {error && (
-        <p role="alert" className="text-critical">
+        <p
+          ref={errorSummary}
+          tabIndex={-1}
+          role="alert"
+          className="text-critical"
+        >
           {error}
         </p>
       )}

@@ -7,7 +7,8 @@ import {
 } from "@/components/feedback/workspace-shell";
 
 export const dynamic = "force-dynamic";
-export default async function NewFeedbackPage({
+export default safePage(NewFeedbackPage);
+async function NewFeedbackPage({
   params,
 }: PageProps<"/[workspace]/feedback/new">) {
   const context = await loadFeedbackContext((await params).workspace);
@@ -34,3 +35,4 @@ export default async function NewFeedbackPage({
     </WorkspaceShell>
   );
 }
+import { safePage } from "@/lib/security/render-boundary";

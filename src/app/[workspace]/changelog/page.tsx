@@ -7,7 +7,8 @@ import {
 } from "@/components/feedback/workspace-shell";
 import { ChangelogList } from "@/components/roadmap/changelog-views";
 export const dynamic = "force-dynamic";
-export default async function ChangelogPage({
+export default safePage(ChangelogPage);
+async function ChangelogPage({
   params,
   searchParams,
 }: PageProps<"/[workspace]/changelog">) {
@@ -41,3 +42,4 @@ export default async function ChangelogPage({
     </WorkspaceShell>
   );
 }
+import { safePage } from "@/lib/security/render-boundary";

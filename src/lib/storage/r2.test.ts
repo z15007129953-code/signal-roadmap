@@ -1,8 +1,28 @@
 // @vitest-environment node
 import { expect, it, vi } from "vitest";
 import { createLogoStorage, createLogoClient } from "./r2";
+import { securityHeaders } from "../security/headers";
 const workspace = "00000000-0000-4000-8000-000000000001";
 const key = `${workspace}/logos/00000000-0000-4000-8000-000000000002.png`;
+it("keeps the actual signed upload origin inside the exact CSP allowlist", async () => {
+  const account = "a".repeat(32);
+  const client = createLogoClient({
+    region: "auto",
+    endpoint: `https://${account}.r2.cloudflarestorage.com`,
+    credentials: { accessKeyId: "test", secretAccessKey: "test" },
+  });
+  const signed = await createLogoStorage(client, "signal-roadmap").prepare(
+    workspace,
+    { type: "image/png", size: 123 },
+  );
+  const origin = new URL(signed.url).origin;
+  expect(origin).toBe(`https://${account}.r2.cloudflarestorage.com`);
+  expect(
+    securityHeaders({ production: true, nonce: "test", r2Account: account })[
+      "Content-Security-Policy"
+    ],
+  ).toContain(origin);
+});
 function storage() {
   const client = createLogoClient({
     region: "auto",

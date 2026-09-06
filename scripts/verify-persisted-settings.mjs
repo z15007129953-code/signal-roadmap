@@ -33,13 +33,13 @@ try {
     .click();
   const boards = page.getByRole("region", { name: "Boards", exact: true });
   const newBoard = boards.locator("details").last();
-  await newBoard.getByLabel("Board name").fill("Team workflow");
+  await newBoard.getByLabel("Board name").fill("Acceptance workflow");
   await newBoard.getByLabel("Address").fill("team-workflow");
   await newBoard
     .getByLabel("Board description")
     .fill("Ideas for day-to-day collaboration.");
   await newBoard.getByRole("button", { name: "Add board" }).click();
-  await boards.locator("summary", { hasText: "Team workflow" }).waitFor();
+  await boards.locator("summary", { hasText: "Acceptance workflow" }).waitFor();
   await page.reload();
   await settle();
   await page
@@ -48,10 +48,10 @@ try {
     .click();
   const tags = page.getByRole("region", { name: "Tags", exact: true });
   const newTag = tags.locator("details").last();
-  await newTag.getByLabel("Tag name").fill("Accessibility");
-  await newTag.getByLabel("Address").fill("accessibility");
+  await newTag.getByLabel("Tag name").fill("Acceptance tag");
+  await newTag.getByLabel("Address").fill("acceptance-tag");
   await newTag.getByRole("button", { name: "Add tag" }).click();
-  await tags.locator("summary", { hasText: "Accessibility" }).waitFor();
+  await tags.locator("summary", { hasText: "Acceptance tag" }).waitFor();
   await page.reload();
   await settle();
   for (const width of [390, 768, 1440]) {
@@ -85,7 +85,7 @@ try {
     .fill("Make daily planning easier to understand for the entire team.");
   await page
     .getByLabel("Board", { exact: true })
-    .selectOption({ label: "Team workflow" });
+    .selectOption({ label: "Acceptance workflow" });
   await page.getByRole("button", { name: "Send feedback" }).click();
   await page.getByRole("link", { name: "View your feedback" }).waitFor();
   await page.goto(settingsUrl);
@@ -93,7 +93,9 @@ try {
   const board = page
     .getByRole("region", { name: "Boards", exact: true })
     .locator("details")
-    .filter({ has: page.locator("summary", { hasText: "Team workflow" }) });
+    .filter({
+      has: page.locator("summary", { hasText: "Acceptance workflow" }),
+    });
   await board.locator("summary").click();
   page.once("dialog", (dialog) => dialog.accept());
   await board.getByRole("button", { name: "Delete board" }).click();
@@ -103,13 +105,13 @@ try {
   const tag = page
     .getByRole("region", { name: "Tags", exact: true })
     .locator("details")
-    .filter({ has: page.locator("summary", { hasText: "Accessibility" }) });
+    .filter({ has: page.locator("summary", { hasText: "Acceptance tag" }) });
   await tag.locator("summary").click();
   page.once("dialog", (dialog) => dialog.accept());
   await tag.getByRole("button", { name: "Delete tag" }).click();
   await page
     .getByRole("region", { name: "Tags", exact: true })
-    .locator("summary", { hasText: "Accessibility" })
+    .locator("summary", { hasText: "Acceptance tag" })
     .waitFor({ state: "detached" });
   await page.reload();
   await settle();

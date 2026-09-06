@@ -39,6 +39,7 @@ it("preserves a typed comment after a recoverable save failure", async () => {
     "Keep this useful context",
   );
   expect(screen.getByRole("alert")).toHaveTextContent("connection");
+  expect(screen.getByRole("alert")).toHaveFocus();
 });
 it("posts replies with their parent and shows the saved comment", async () => {
   const fetcher = vi.fn().mockResolvedValue(

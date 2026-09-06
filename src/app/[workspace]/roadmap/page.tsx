@@ -11,7 +11,8 @@ import {
 } from "@/components/roadmap/roadmap-board";
 import type { FeedbackStatus, FeedbackPage } from "@/features/feedback/types";
 export const dynamic = "force-dynamic";
-export default async function RoadmapPage({
+export default safePage(RoadmapPage);
+async function RoadmapPage({
   params,
   searchParams,
 }: PageProps<"/[workspace]/roadmap">) {
@@ -75,3 +76,4 @@ export default async function RoadmapPage({
     </WorkspaceShell>
   );
 }
+import { safePage } from "@/lib/security/render-boundary";

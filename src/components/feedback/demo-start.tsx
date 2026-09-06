@@ -1,17 +1,30 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { feedbackPath } from "./paths";
 export function DemoStart() {
   const [pending, setPending] = useState(false);
   const [slug, setSlug] = useState("");
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState("");
+  const alert = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (failed) alert.current?.focus();
+  }, [failed]);
   async function start() {
     if (pending) return;
     setPending(true);
-    setFailed(false);
+    setFailed("");
     try {
       const response = await fetch("/api/demo/start", { method: "POST" });
       const result = await response.json();
+      if (response.status === 429) {
+        const seconds = Number(response.headers.get("Retry-After"));
+        setFailed(
+          Number.isInteger(seconds) && seconds > 0 && seconds <= 86400
+            ? `Too many demo requests. Wait ${seconds} seconds before trying again.`
+            : "Too many demo requests. Wait a few minutes before trying again.",
+        );
+        return;
+      }
       if (
         !response.ok ||
         !result.ok ||
@@ -21,7 +34,9 @@ export function DemoStart() {
         throw new Error("Unavailable");
       setSlug(result.value.slug);
     } catch {
-      setFailed(true);
+      setFailed(
+        "Your demo could not be created. Check your connection and try again shortly.",
+      );
     } finally {
       setPending(false);
     }
@@ -49,8 +64,13 @@ export function DemoStart() {
         </button>
       )}
       {failed && (
-        <p role="alert" className="max-w-prose text-critical">
-          Your demo could not be created. Please try again shortly.
+        <p
+          ref={alert}
+          tabIndex={-1}
+          role="alert"
+          className="max-w-prose text-critical"
+        >
+          {failed}
         </p>
       )}
     </div>

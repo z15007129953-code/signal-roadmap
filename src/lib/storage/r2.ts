@@ -16,6 +16,8 @@ export function createLogoClient(config: S3ClientConfig) {
   // Presigning happens before browser bytes exist; do not sign an empty-body checksum.
   return new S3Client({
     ...config,
+    // Keep uploads on the exact account origin allowed by the application CSP.
+    forcePathStyle: true,
     requestChecksumCalculation: "WHEN_REQUIRED",
   });
 }

@@ -36,7 +36,30 @@ it("shows a recoverable error when demo setup fails", async () => {
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "could not be created",
   );
+  expect(screen.getByRole("alert")).toHaveFocus();
   expect(
     screen.getByRole("button", { name: "Start a private demo" }),
   ).toBeEnabled();
+});
+it("explains rate limits without claiming a new demo was created", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue(
+      Response.json(
+        {
+          ok: false,
+          error: { code: "RATE_LIMITED", requestId: "request-1234" },
+        },
+        { status: 429, headers: { "Retry-After": "120" } },
+      ),
+    ),
+  );
+  render(<DemoStart />);
+  await userEvent.click(
+    screen.getByRole("button", { name: "Start a private demo" }),
+  );
+  expect(await screen.findByRole("alert")).toHaveTextContent("120 seconds");
+  expect(
+    screen.queryByRole("link", { name: "Open your feedback board" }),
+  ).not.toBeInTheDocument();
 });

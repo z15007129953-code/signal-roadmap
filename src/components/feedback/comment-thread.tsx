@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Markdown from "react-markdown";
 import Link from "next/link";
 import type {
@@ -28,6 +28,10 @@ export function CommentThread({
   const [deleting, setDeleting] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const errorSummary = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (error) errorSummary.current?.focus();
+  }, [error]);
   const [notice, setNotice] = useState("");
   const field = useRef<HTMLTextAreaElement>(null);
   // Keep locally appended comments after all cursor-loaded older comments.
@@ -364,7 +368,12 @@ export function CommentThread({
         </Link>
       )}
       {error && (
-        <p role="alert" className="text-critical">
+        <p
+          ref={errorSummary}
+          tabIndex={-1}
+          role="alert"
+          className="text-critical"
+        >
           {error}
         </p>
       )}

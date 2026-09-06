@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { FeedbackWorkspace } from "@/features/feedback/types";
 import { feedbackPath } from "./paths";
 import { DemoPersona } from "./demo-persona";
+import { SystemState } from "@/components/system/system-state";
 
 export function WorkspaceShell({
   workspace,
@@ -129,39 +130,36 @@ export function WorkspaceShell({
 }
 
 export function FeedbackAccessNotice({ code }: { code: string }) {
-  const expired = code === "DEMO_EXPIRED";
+  if (code === "DEMO_EXPIRED") return <SystemState kind="expired" />;
+  if (code === "DEMO_QUOTA_EXCEEDED") return <SystemState kind="quota" />;
+  if (code === "FORBIDDEN" || code === "UNAUTHENTICATED")
+    return <SystemState kind="forbidden" />;
   return (
     <main className="mx-auto grid w-full max-w-2xl gap-5 px-5 py-20">
       <Link href="/" className="w-fit py-2 font-semibold">
         Signal Roadmap /
       </Link>
       <h1 className="font-serif text-3xl">
-        {expired
-          ? "This demo has expired."
-          : code === "VALIDATION_FAILED"
-            ? "These filters could not be applied."
-            : "This feedback is not available."}
+        {code === "VALIDATION_FAILED"
+          ? "These filters could not be applied."
+          : "This feedback is not available."}
       </h1>
       <p className="text-muted">
-        {expired
-          ? "Demo workspaces last 24 hours. Start a new one to keep exploring."
-          : code === "VALIDATION_FAILED"
-            ? "Go back to the feedback board and choose valid search filters."
-            : "The link may be private, or your current session may not have access. Sign in with a workspace account, or start your own demo."}
+        {code === "VALIDATION_FAILED"
+          ? "Go back to the feedback board and choose valid search filters."
+          : "The link may be private, or your current session may not have access. Sign in with a workspace account, or start your own demo."}
       </p>
       <div className="flex flex-wrap gap-6">
         <Link href="/" className="py-2 underline">
           Back to home
         </Link>
-        {!expired && (
-          <Link
-            prefetch={false}
-            href="/api/auth/signin"
-            className="py-2 underline"
-          >
-            Sign in
-          </Link>
-        )}
+        <Link
+          prefetch={false}
+          href="/api/auth/signin"
+          className="py-2 underline"
+        >
+          Sign in
+        </Link>
       </div>
     </main>
   );

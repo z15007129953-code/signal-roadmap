@@ -14,6 +14,11 @@ const valid = {
 };
 
 describe("environment validation", () => {
+  it("allows an explicitly unset secondary database without weakening reset URL validation", () => {
+    expect(
+      envSchema.safeParse({ ...valid, TEST_DATABASE_URL: "" }).success,
+    ).toBe(true);
+  });
   it("recognizes encoded aliases of the same database", () => {
     expect(
       envSchema.safeParse({

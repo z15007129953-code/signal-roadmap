@@ -1,6 +1,6 @@
 "use client";
 import { SystemState } from "@/components/system/system-state";
-export default function FeedbackError({
+export default function ErrorPage({
   error,
   retry,
 }: {

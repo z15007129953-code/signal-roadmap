@@ -43,7 +43,10 @@ export const envSchema = z
       .enum(["development", "test", "production"])
       .default("development"),
     DATABASE_URL: postgresUrl,
-    TEST_DATABASE_URL: postgresUrl.optional(),
+    TEST_DATABASE_URL: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      postgresUrl.optional(),
+    ),
     APP_URL: z.url(),
     AUTH_SECRET: z.string().min(32),
     DEMO_COOKIE_SECRET: z.string().min(32),

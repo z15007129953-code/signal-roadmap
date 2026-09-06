@@ -1,4 +1,5 @@
 import "server-only";
+import { withDiagnostics } from "./security/diagnostics";
 import { createEngagementService } from "@/features/feedback/engagement-service";
 import { createEngagementRepository } from "@/features/feedback/engagement-repository";
 import { createNotificationService } from "@/features/notifications/notification-service";
@@ -27,17 +28,19 @@ export async function handleEngagementRequest(
   feedbackId?: string,
   itemId?: string,
 ) {
-  try {
-    return await createEngagementHandlers({
-      appUrl: getEnv().APP_URL,
-      loadContext: async (slug) => {
-        const context = await loadFeedbackContext(slug);
-        return context.ok
-          ? ok({ ...context.value, ...engagementServices() })
-          : context;
-      },
-    })(action, request, slug, feedbackId, itemId);
-  } catch {
-    return feedbackUnavailable();
-  }
+  return withDiagnostics(request, async () => {
+    try {
+      return await createEngagementHandlers({
+        appUrl: getEnv().APP_URL,
+        loadContext: async (slug) => {
+          const context = await loadFeedbackContext(slug);
+          return context.ok
+            ? ok({ ...context.value, ...engagementServices() })
+            : context;
+        },
+      })(action, request, slug, feedbackId, itemId);
+    } catch {
+      return feedbackUnavailable();
+    }
+  });
 }

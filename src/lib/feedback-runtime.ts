@@ -1,4 +1,5 @@
 import "server-only";
+import { withDiagnostics } from "./security/diagnostics";
 import { getCurrentActor } from "@/features/auth/current-actor";
 import { createFeedbackRepository } from "@/features/feedback/feedback-repository";
 import { getDatabase } from "./db";
@@ -18,12 +19,14 @@ export async function handleFeedbackRequest(
   request: Request,
   slug: string,
 ) {
-  try {
-    return await createFeedbackHandlers({
-      appUrl: getEnv().APP_URL,
-      loadContext: loadFeedbackContext,
-    })[action](request, slug);
-  } catch {
-    return feedbackUnavailable();
-  }
+  return withDiagnostics(request, async () => {
+    try {
+      return await createFeedbackHandlers({
+        appUrl: getEnv().APP_URL,
+        loadContext: loadFeedbackContext,
+      })[action](request, slug);
+    } catch {
+      return feedbackUnavailable();
+    }
+  });
 }
