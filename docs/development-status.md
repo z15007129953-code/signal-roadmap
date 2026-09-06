@@ -1,8 +1,9 @@
 # Development status — 6 September 2026
 
-Signal Roadmap is under active implementation. Feedback submission and discovery
-are implemented in source, but the persisted end-to-end workflow has not been
-validated on a running database. No GitHub repository or deployment has been published.
+Signal Roadmap is under active implementation. Feedback, voting, following,
+comments and notifications now work with project-local PostgreSQL 17.11 and
+have a persisted Chrome acceptance journey. No GitHub repository or deployment
+has been published. Release each completed product publicly; use Chrome for login.
 
 ## Implemented foundations
 
@@ -49,14 +50,29 @@ validated on a running database. No GitHub repository or deployment has been pub
 ## Not yet implemented
 
 Full showcase seeding, remaining write quotas and request-rate enforcement,
-voting/comments/following, moderation actions, roadmap/changelog,
-settings, browser acceptance tests, CI and deployment. The other three products
+moderation actions, roadmap/changelog, settings, the full moderation acceptance
+journey, CI and deployment. The other three products
 and portfolio hub remain unimplemented.
+
+## Engagement and notifications
+
+- Desired-state votes/follows are transactional and idempotent. State is read
+  with one SQL snapshot; pending and merged feedback reject all engagement writes.
+- Comments support replies, author edits, author/moderator deletion, tombstones,
+  server-authorized controls, retained drafts and cursor pagination. Demo comment
+  quota is 100, enforced under a workspace lock.
+- Follower notifications exclude the actor and use unique event keys. Inbox and
+  mark-read operations revalidate persisted membership and demo expiry.
+- Vote/follow controls provide optimistic feedback with rollback and live
+  announcements. Persona changes refresh server permissions and remount the
+  discussion for the new member. HTTP endpoints require exact Origin for writes,
+  bounded JSON where relevant, no-store responses and safe infrastructure errors.
 
 ## Local verification and limitations
 
-Latest gate: 210 tests passed, 24 database tests skipped; TypeScript, ESLint,
-Prettier, migration consistency and the webpack production build passed. The
+Latest functional gate: 234 unit/component tests passed. Separately, all 33 real
+PostgreSQL cases passed (17 foundations, 7 feedback, 9 engagement). TypeScript,
+ESLint and the webpack production build passed. The
 dedicated database command correctly exited with failure when TEST_DATABASE_URL
 was absent. Auth logging and malformed-URL validation have regression coverage
 to prevent credentials appearing in errors.
@@ -65,13 +81,13 @@ Demo lifecycle and HTTP tests use repository doubles to isolate service rules.
 They do not establish PostgreSQL transaction, cleanup-locking or foreign-key
 correctness. Real database cases cover atomic creation rollback, isolated
 memberships, a 101-workspace cleanup, a locked workspace, showcase exclusion,
-mixed active/expired sessions, and repeat cleanup. All remain unexecuted locally.
+mixed active/expired sessions, and repeat cleanup. All now pass locally.
 
 Feedback service, component, HTTP and server-page integration tests run without
 a database. They verify request/UI wiring, not PostgreSQL execution. The seven new
 real feedback database cases cover persisted roles, tenant boundaries, private
-demos, membership revocation, quota concurrency, literal search, and stable pagination. They also remain
-unexecuted. Run this suite separately after the foundation database suite to
+demos, membership revocation, quota concurrency, literal search, and stable pagination. All pass.
+Run this suite separately after the foundation database suite to
 avoid its shared-table cleanup racing the existing suite's reset:
 
 ```sh
@@ -112,6 +128,15 @@ Reports and screenshots are generated under ignored `.local/browser-qa/`.
 The script uses a fresh browser context and closes it and the fixture server
 after testing; it does not access existing browser profiles or download tools.
 
+The new `scripts/verify-persisted-engagement.mjs` uses the live development server
+and a fresh Chrome profile: create demo, publish as moderator, vote/follow and
+reload, switch member, post/edit/reload a comment, switch moderator, read a
+notification and reload, then verify a separate browser cannot read the demo.
+All six grouped checks pass. Real discussion scans at 375/1440px found no
+automated A/AA violations or horizontal overflow; screenshots were inspected.
+Artifacts are ignored under `.local/persisted-qa/`. The complete moderation,
+roadmap and changelog acceptance journey remains outstanding.
+
 ## Demo endpoints (not ready for public deployment)
 
 `POST /api/demo/start` creates a temporary workspace and sets `signal-demo`.
@@ -127,9 +152,12 @@ batch; repeat for a backlog. No scheduler or paid resource has been configured.
 Database/configuration failures return a generic 503 without credential details.
 Rate limits and the remaining write quotas are still required before exposing
 these endpoints publicly. Feedback creation now enforces its 30-item demo quota;
-comment/changelog quotas and request-rate constants are not yet enforced.
+comment quota is enforced; changelog quota and request-rate enforcement remain.
 
-The current machine has no usable PostgreSQL or Docker runtime. Database tests
+PostgreSQL 17.11 was checksum-verified and built into ignored `.local/postgres`,
+without global installation. Two password-protected clusters listen only on
+127.0.0.1:54329 and 54330. Random secrets are in ignored mode-0600 `.env.local`.
+Database tests
 are explicitly skipped without TEST_DATABASE_URL; skipped tests are not passes.
 The dedicated `test:db` command fails if that variable is absent, preventing a
 false-green database verification. SQL generation/checks are not proof that a
@@ -149,12 +177,25 @@ node node_modules/drizzle-kit/bin.cjs check
 node node_modules/next/dist/bin/next build --webpack
 ```
 
-The standard Turbopack build needs a local worker port denied by this sandbox.
-The supported webpack build runs without that local-port requirement; this does
-not validate browser behavior or persisted workflows. No production secrets are
-needed to build.
+The supported webpack build passes. A build alone does not validate browser
+behavior or persisted workflows. No production secrets are needed to build.
 
-## Database setup when a local runtime is available
+## Local database and development startup
+
+For this configured machine (does not replace data):
+
+```sh
+node scripts/local-database.mjs start
+node --env-file=.env.local src/lib/db/cli.ts migrate
+node node_modules/next/dist/bin/next dev --webpack --hostname 127.0.0.1 --port 3100
+```
+
+`local-database.mjs init` initializes new project-local clusters and secrets only
+when no existing cluster/config is present. It requires PostgreSQL binaries in
+`.local/postgres/bin`. It refuses overwrites. Do not use production mode to
+bypass HTTPS/SMTP checks for local development.
+
+Alternatively, with Docker:
 
 Copy `.env.example` to `.env.local` and replace all placeholders. Use independent
 random secrets and a local-only PostgreSQL password; encode that password in the
@@ -171,6 +212,9 @@ database, then verifies real foreign keys, uniqueness, cleanup and adapter calls
 `reset-test` intentionally clears test application data and must never be used
 with an unrelated database. Development data is not reset by the tests.
 
-Downloading PostgreSQL was previously rejected because the automatic approval
-service returned HTTP 503. No alternate download path was used to bypass that
-rejection. Database provisioning and end-to-end verification remain outstanding.
+After the foundation and feedback suites, run engagement tests separately:
+
+```sh
+ENGAGEMENT_DATABASE_TEST=1 node --env-file=.env.local node_modules/vitest/vitest.mjs run src/test/engagement-database.test.ts
+node scripts/verify-persisted-engagement.mjs
+```

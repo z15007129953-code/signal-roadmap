@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import type { FeedbackWorkspace } from "@/features/feedback/types";
 import { feedbackPath } from "./paths";
+import { DemoPersona } from "./demo-persona";
 
 export function WorkspaceShell({
   workspace,
@@ -32,6 +33,12 @@ export function WorkspaceShell({
           <a className="py-2 underline" href={feedbackPath(workspace.slug)}>
             Feedback
           </a>
+          <a
+            className="py-2 underline"
+            href={`/${encodeURIComponent(workspace.slug)}/notifications`}
+          >
+            Notifications
+          </a>
           {moderator && (
             <a
               className="py-2 underline"
@@ -49,6 +56,7 @@ export function WorkspaceShell({
             Your workspace expires 24 hours after it was created. Do not add
             sensitive information.
           </span>
+          <DemoPersona role={moderator ? "moderator" : "member"} />
         </aside>
       )}
       <main id="main" className="py-8 sm:py-12">

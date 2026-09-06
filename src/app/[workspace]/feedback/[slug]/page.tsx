@@ -6,6 +6,9 @@ import {
   FeedbackAccessNotice,
 } from "@/components/feedback/workspace-shell";
 import { feedbackPath } from "@/components/feedback/paths";
+import { engagementServices } from "@/lib/engagement-runtime";
+import { EngagementControls } from "@/components/feedback/engagement-controls";
+import { CommentThread } from "@/components/feedback/comment-thread";
 
 export const dynamic = "force-dynamic";
 export default async function FeedbackDetailPage({
@@ -23,6 +26,37 @@ export default async function FeedbackDetailPage({
     if (detail.error.code === "NOT_FOUND") notFound();
     return <FeedbackAccessNotice code={detail.error.code} />;
   }
+  let discussion = null;
+  if (detail.value.visibility === "published") {
+    const { engagement } = engagementServices();
+    const [state, comments] = await Promise.all([
+      engagement.state(actor, workspace.id, detail.value.id),
+      engagement.listComments(actor, workspace.id, detail.value.id),
+    ]);
+    discussion =
+      state.ok && comments.ok ? (
+        <>
+          <EngagementControls
+            key={`engagement-${actor?.memberId ?? "public"}`}
+            workspace={workspace.slug}
+            feedbackId={detail.value.id}
+            initial={state.value}
+            canEngage={!!actor}
+          />
+          <CommentThread
+            key={`comments-${actor?.memberId ?? "public"}`}
+            workspace={workspace.slug}
+            feedbackId={detail.value.id}
+            initial={comments.value}
+            canComment={!!actor}
+          />
+        </>
+      ) : (
+        <p className="mt-8 text-muted">
+          Discussion is not available for this feedback.
+        </p>
+      );
+  }
   return (
     <WorkspaceShell
       workspace={workspace}
@@ -35,6 +69,7 @@ export default async function FeedbackDetailPage({
         Back to feedback
       </a>
       <FeedbackDetail item={detail.value} />
+      {discussion}
     </WorkspaceShell>
   );
 }

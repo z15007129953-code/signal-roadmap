@@ -3,7 +3,7 @@ import { err, type Result } from "./http/result";
 import { domainError } from "./http/errors";
 import { toHttpResponse } from "./http/response";
 
-function respond<T>(result: Result<T>, successStatus = 200) {
+export function respond<T>(result: Result<T>, successStatus = 200) {
   const response = result.ok
     ? Response.json(result, { status: successStatus })
     : toHttpResponse(result);
@@ -22,7 +22,7 @@ export function feedbackUnavailable() {
     { status: 503, headers: { "Cache-Control": "no-store" } },
   );
 }
-async function readBody(request: Request): Promise<unknown> {
+export async function readBody(request: Request): Promise<unknown> {
   if (
     request.headers.get("content-type")?.split(";")[0].trim().toLowerCase() !==
       "application/json" ||

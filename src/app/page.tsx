@@ -73,9 +73,10 @@ export default function Home() {
       <footer className="grid gap-2 border-t border-rule py-6 text-sm text-muted">
         <p className="font-semibold">Development preview</p>
         <p className="max-w-prose">
-          Feedback submission and discovery are being built first. Voting,
-          comments and moderation actions are not available yet. Live database
-          validation and public-release safeguards are still pending.
+          Try feedback submission, voting, following, comments and notifications
+          in a private workspace. Switch to moderator view to publish a new idea
+          immediately. Approval, merging, roadmap and changelog tools are still
+          being built; this preview is not a public production service.
         </p>
       </footer>
     </div>

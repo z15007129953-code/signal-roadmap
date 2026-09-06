@@ -10,6 +10,13 @@ import { loadFeedbackContext } from "@/lib/feedback-runtime";
 import type { FeedbackContext } from "@/lib/feedback-context";
 
 vi.mock("@/lib/feedback-runtime", () => ({ loadFeedbackContext: vi.fn() }));
+vi.mock("@/lib/engagement-runtime", () => ({ engagementServices: vi.fn() }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
+  notFound: () => {
+    throw new Error("NOT_FOUND");
+  },
+}));
 const boardId = "00000000-0000-4000-8000-000000000001";
 const actor = {
   kind: "demo" as const,
