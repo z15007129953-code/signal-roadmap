@@ -1,13 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { and, eq, isNull, sql } from "drizzle-orm";
 import type { Database } from "../../lib/db/index.ts";
-import {
-  boards,
-  demoSessions,
-  members,
-  workspaces,
-} from "../../lib/db/schema.ts";
+import { demoSessions, members, workspaces } from "../../lib/db/schema.ts";
 import type { DemoRepository } from "./demo-session.ts";
+import { seedWorkspace } from "../demo/seed.ts";
 
 export function createDemoRepository(db: Database): DemoRepository {
   return {
@@ -27,26 +23,25 @@ export function createDemoRepository(db: Database): DemoRepository {
           .insert(demoSessions)
           .values({ workspaceId: id, tokenHash, expiresAt })
           .returning();
+        const memberId = randomUUID();
+        const moderatorId = randomUUID();
         await tx.insert(members).values([
           {
+            id: memberId,
             workspaceId: id,
             demoSessionId: session.id,
             displayName: "Demo member",
             role: "member",
           },
           {
+            id: moderatorId,
             workspaceId: id,
             demoSessionId: session.id,
             displayName: "Demo moderator",
             role: "moderator",
           },
         ]);
-        await tx.insert(boards).values({
-          workspaceId: id,
-          slug: "ideas",
-          name: "Ideas",
-          description: "Suggest a change and discuss it with the community.",
-        });
+        await seedWorkspace(tx, { workspaceId: id, memberId, moderatorId });
         return { workspaceId: id, slug };
       });
     },

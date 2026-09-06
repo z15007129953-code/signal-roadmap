@@ -132,7 +132,10 @@ describe.skipIf(!url)("PostgreSQL tenant integrity", () => {
       .select()
       .from(schema.feedback)
       .where(eq(schema.feedback.workspaceId, first.workspaceId));
-    expect(own.map((item) => item.title)).toEqual([first.workspaceId]);
+    expect(own).toHaveLength(22);
+    expect(
+      own.filter((item) => item.slug === "isolated").map((item) => item.title),
+    ).toEqual([first.workspaceId]);
     await db!
       .delete(schema.workspaces)
       .where(eq(schema.workspaces.id, first.workspaceId));

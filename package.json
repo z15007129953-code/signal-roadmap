@@ -18,7 +18,9 @@
     "db:migrate": "node --env-file-if-exists=.env.local src/lib/db/cli.ts migrate",
     "db:reset:test": "node --env-file-if-exists=.env.local src/lib/db/cli.ts reset-test",
     "test:db": "node --env-file-if-exists=.env.local src/lib/db/cli.ts test",
-    "demo:cleanup": "node --env-file-if-exists=.env.local scripts/cleanup-demo.ts"
+    "demo:cleanup": "node --env-file-if-exists=.env.local scripts/cleanup-demo.ts",
+    "db:seed": "node --env-file-if-exists=.env.local scripts/seed.ts",
+    "demo:reset": "node --env-file-if-exists=.env.local scripts/reset-demo.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.3",
