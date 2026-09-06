@@ -1,7 +1,8 @@
 # Development status — 6 September 2026
 
-Signal Roadmap is under active implementation. It is not yet a working feedback
-portal or a deployed demo. No GitHub repository or deployment has been published.
+Signal Roadmap is under active implementation. Feedback submission and discovery
+are implemented in source, but the persisted end-to-end workflow has not been
+validated on a running database. No GitHub repository or deployment has been published.
 
 ## Implemented foundations
 
@@ -23,17 +24,38 @@ portal or a deployed demo. No GitHub repository or deployment has been published
   and one starter board. Cleanup processes at most 100 expired demos and excludes
   showcase workspaces and workspaces with any active session.
 
+## Feedback submission and discovery
+
+- Workspace-scoped list, detail and submission pages, plus a product homepage
+  with an isolated-demo entry point. The interface follows the approved editorial
+  noticeboard direction: titles and readable status labels lead, with visible
+  search/filter/submit controls and no fabricated engagement.
+- Strict title/body/taxonomy input validation, readable UUID-suffixed slugs,
+  persisted membership and role checks, and an atomic 30-feedback demo quota.
+- Published lists, author/moderator-only pending details, a read-only moderator
+  queue, and private demo reads. Publishing/moderation actions come in a later task.
+- Board/tag/status/literal-title filters and descending timestamp/ID pagination.
+  Cursor validation preserves PostgreSQL microseconds and rejects impossible dates.
+- Up to three optional similar-title suggestions. A failed or stale suggestion
+  request does not block submission.
+- Labelled controls, keyboard submission, focused field-linked validation,
+  retained drafts after network/quota errors, pending-review confirmation,
+  loading, empty and unavailable states. Markdown disables raw HTML and embedded
+  images; unsafe link protocols are rejected by the Markdown renderer.
+- POST `/api/workspaces/[workspace]/feedback` requires exact Origin and bounded
+  JSON input. Suggestions use a scoped GET endpoint. Both return no-store
+  responses and sanitize infrastructure failures.
+
 ## Not yet implemented
 
-Full showcase seeding, quota and request-rate enforcement,
-feedback/engagement/moderation workflows, roadmap/changelog,
-settings, finished product screens, browser acceptance tests, CI and deployment.
-The homepage is still the scaffold. The other three products and portfolio hub
-remain unimplemented.
+Full showcase seeding, remaining write quotas and request-rate enforcement,
+voting/comments/following, moderation actions, roadmap/changelog,
+settings, browser acceptance tests, CI and deployment. The other three products
+and portfolio hub remain unimplemented.
 
 ## Local verification and limitations
 
-Latest gate: 161 tests passed, 17 database tests skipped; TypeScript, ESLint,
+Latest gate: 210 tests passed, 24 database tests skipped; TypeScript, ESLint,
 Prettier, migration consistency and the webpack production build passed. The
 dedicated database command correctly exited with failure when TEST_DATABASE_URL
 was absent. Auth logging and malformed-URL validation have regression coverage
@@ -44,6 +66,29 @@ They do not establish PostgreSQL transaction, cleanup-locking or foreign-key
 correctness. Real database cases cover atomic creation rollback, isolated
 memberships, a 101-workspace cleanup, a locked workspace, showcase exclusion,
 mixed active/expired sessions, and repeat cleanup. All remain unexecuted locally.
+
+Feedback service, component, HTTP and server-page integration tests run without
+a database. They verify request/UI wiring, not PostgreSQL execution. The seven new
+real feedback database cases cover persisted roles, tenant boundaries, private
+demos, membership revocation, quota concurrency, literal search, and stable pagination. They also remain
+unexecuted. Run this suite separately after the foundation database suite to
+avoid its shared-table cleanup racing the existing suite's reset:
+
+```sh
+FEEDBACK_DATABASE_TEST=1 node --env-file=.env.local node_modules/vitest/vitest.mjs run src/test/feedback-database.test.ts
+```
+
+This command requires a configured TEST_DATABASE_URL. Without it, the suite skips;
+that is not successful database verification. The existing `test:db` command
+still runs only the foundation database suite.
+
+Browser visual acceptance is outstanding. A headless Chrome launch aborted
+inside the sandbox; the isolated-browser permission request was rejected because
+the automatic approval service returned HTTP 503. No alternate execution path
+was used to bypass the rejection. Mobile layout, 200% zoom, light/dark screenshots
+and real keyboard navigation must be checked in a permitted browser before
+claiming the design is complete. The long-title component test checks full text
+and wrap styling; it is not proof of rendered geometry.
 
 ## Demo endpoints (not ready for public deployment)
 
@@ -58,8 +103,9 @@ in production. Invalid credentials fail closed.
 only a deletion count. The local `demo:cleanup` command performs the same single
 batch; repeat for a backlog. No scheduler or paid resource has been configured.
 Database/configuration failures return a generic 503 without credential details.
-Rate limits and full write-quota enforcement are still required before exposing
-these endpoints publicly; the quota constants alone do not enforce limits.
+Rate limits and the remaining write quotas are still required before exposing
+these endpoints publicly. Feedback creation now enforces its 30-item demo quota;
+comment/changelog quotas and request-rate constants are not yet enforced.
 
 The current machine has no usable PostgreSQL or Docker runtime. Database tests
 are explicitly skipped without TEST_DATABASE_URL; skipped tests are not passes.

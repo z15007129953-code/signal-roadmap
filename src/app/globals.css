@@ -93,6 +93,40 @@ button,
   touch-action: manipulation;
 }
 
+.feedback-markdown > * + * {
+  margin-top: 1rem;
+}
+.feedback-markdown :is(h1, h2, h3, h4, h5, h6) {
+  font-weight: 600;
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-tight);
+  margin-top: 2rem;
+}
+.feedback-markdown :is(ul, ol) {
+  padding-inline-start: 1.5rem;
+  list-style: revert;
+}
+.feedback-markdown li + li {
+  margin-top: 0.5rem;
+}
+.feedback-markdown a {
+  text-decoration: underline;
+}
+.feedback-markdown pre {
+  max-width: 100%;
+  overflow-x: auto;
+  background: var(--color-surface-muted);
+  padding: 1rem;
+}
+.feedback-markdown code {
+  font-family: var(--font-code);
+  font-size: 0.875em;
+}
+.feedback-markdown blockquote {
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
