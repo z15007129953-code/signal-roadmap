@@ -18,22 +18,48 @@ portal or a deployed demo. No GitHub repository or deployment has been published
 - Signed demo credential primitives, immutable identity resolution, and scoped
   membership queries. An invalid demo cookie never falls through to an account
   with greater privileges.
+- Demo creation, signed HTTP-only cookies, persisted member/moderator switching,
+  and cleanup interfaces. Creation atomically adds a workspace, both personas,
+  and one starter board. Cleanup processes at most 100 expired demos and excludes
+  showcase workspaces and workspaces with any active session.
 
 ## Not yet implemented
 
-Demo creation/seeding, persona-switch endpoints, cookies set by the server, quota
-enforcement, cleanup, feedback/engagement/moderation workflows, roadmap/changelog,
+Full showcase seeding, quota and request-rate enforcement,
+feedback/engagement/moderation workflows, roadmap/changelog,
 settings, finished product screens, browser acceptance tests, CI and deployment.
 The homepage is still the scaffold. The other three products and portfolio hub
 remain unimplemented.
 
 ## Local verification and limitations
 
-Latest gate: 132 tests passed, 12 database tests skipped; TypeScript, ESLint,
+Latest gate: 161 tests passed, 17 database tests skipped; TypeScript, ESLint,
 Prettier, migration consistency and the webpack production build passed. The
 dedicated database command correctly exited with failure when TEST_DATABASE_URL
 was absent. Auth logging and malformed-URL validation have regression coverage
 to prevent credentials appearing in errors.
+
+Demo lifecycle and HTTP tests use repository doubles to isolate service rules.
+They do not establish PostgreSQL transaction, cleanup-locking or foreign-key
+correctness. Real database cases cover atomic creation rollback, isolated
+memberships, a 101-workspace cleanup, a locked workspace, showcase exclusion,
+mixed active/expired sessions, and repeat cleanup. All remain unexecuted locally.
+
+## Demo endpoints (not ready for public deployment)
+
+`POST /api/demo/start` creates a temporary workspace and sets `signal-demo`.
+`POST /api/demo/persona` accepts only `{ "persona": "member" | "moderator" }`.
+Both require an exact Origin match with APP_URL and return only workspace IDs and
+slugs. Persona switching retains the original expiry. No account owner persona
+is created. Cookies are HTTP-only, SameSite=Lax, host-only, and Secure on HTTPS or
+in production. Invalid credentials fail closed.
+
+`GET /api/cron/cleanup-demo` requires the configured bearer CRON_SECRET and returns
+only a deletion count. The local `demo:cleanup` command performs the same single
+batch; repeat for a backlog. No scheduler or paid resource has been configured.
+Database/configuration failures return a generic 503 without credential details.
+Rate limits and full write-quota enforcement are still required before exposing
+these endpoints publicly; the quota constants alone do not enforce limits.
 
 The current machine has no usable PostgreSQL or Docker runtime. Database tests
 are explicitly skipped without TEST_DATABASE_URL; skipped tests are not passes.

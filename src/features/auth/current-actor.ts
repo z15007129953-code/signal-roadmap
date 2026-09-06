@@ -6,7 +6,7 @@ import { auth } from "./auth";
 import { createIdentityRepository } from "./identity-repository";
 import { resolveActor } from "./resolve-actor";
 
-export const demoCookieName = "signal-demo";
+import { demoCookieName } from "./demo-session";
 
 /** The workspace ID must come from resolving the target resource, not a claimed role. */
 export async function getCurrentActor(workspaceId: string) {
