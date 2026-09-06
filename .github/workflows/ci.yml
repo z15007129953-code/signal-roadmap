@@ -1,0 +1,81 @@
+name: Verify
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: signal_ci
+          POSTGRES_PASSWORD: ephemeral_ci_only
+          POSTGRES_DB: signal
+        ports: [54329:5432]
+        options: >-
+          --health-cmd "pg_isready -U signal_ci -d signal"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      postgres-test:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: signal_ci
+          POSTGRES_PASSWORD: ephemeral_ci_only
+          POSTGRES_DB: signal_test
+        ports: [54330:5432]
+        options: >-
+          --health-cmd "pg_isready -U signal_ci -d signal_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://signal_ci:ephemeral_ci_only@127.0.0.1:54329/signal
+      TEST_DATABASE_URL: postgresql://signal_ci:ephemeral_ci_only@127.0.0.1:54330/signal_test
+      APP_URL: http://127.0.0.1:3200
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm exec next typegen
+      - run: pnpm typecheck
+      - run: pnpm db:migrate
+      - run: pnpm test:coverage
+        env:
+          TEST_DATABASE_URL: ""
+      - name: Real PostgreSQL suites (sequential)
+        shell: bash
+        run: |
+          pnpm test:db
+          FEEDBACK_DATABASE_TEST=1 pnpm exec vitest run src/test/feedback-database.test.ts
+          ENGAGEMENT_DATABASE_TEST=1 pnpm exec vitest run src/test/engagement-database.test.ts
+          MODERATION_DATABASE_TEST=1 pnpm exec vitest run src/test/moderation-database.test.ts
+          ROADMAP_DATABASE_TEST=1 pnpm exec vitest run src/test/roadmap-database.test.ts
+          CHANGELOG_NOTIFICATION_DATABASE_TEST=1 pnpm exec vitest run src/test/changelog-notifications.test.ts
+          SETTINGS_DATABASE_TEST=1 pnpm exec vitest run src/test/settings-database.test.ts
+          DEMO_FIXTURES_DATABASE_TEST=1 pnpm exec vitest run src/test/demo-fixtures-database.test.ts
+      - run: pnpm build --webpack
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-failure-evidence
+          path: test-results/
+          retention-days: 7
+          if-no-files-found: ignore

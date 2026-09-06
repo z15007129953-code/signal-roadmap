@@ -1,5 +1,10 @@
 # Development status — 6 September 2026
 
+This is a chronological engineering log. Sections above **September 6
+continuation** preserve earlier checkpoints, not the latest release state.
+Use that final section for current verification and remaining release gates,
+and the README for supported installation commands.
+
 Signal Roadmap is under active implementation. Feedback, voting, following,
 comments and notifications now work with project-local PostgreSQL 17.11 and
 have a persisted Chrome acceptance journey. No GitHub repository or deployment
@@ -313,13 +318,30 @@ rendering, CSP compatibility, and matching API/header diagnostic IDs.
 Actual SDK signing now forces path-style R2 addressing so the upload URL matches
 the exact CSP origin; the compatibility regression passes without live secrets.
 
-Task 13 is in progress. The main persisted browser journey passed on the isolated
-port-3200 test app, including vote union, retained merge attribution/redirect,
-publication, and the follower's notification. Public responsive/axe tests passed
-at 390, 768, and 1440 pixels. Admin accessibility/keyboard coverage is still pending.
+Task 13 is verified locally: the full revised browser suite passed all 5 tests
+in 2.8 minutes, including the persisted lifecycle and member/moderator action
+reachability, axe and real Tab/Shift+Tab navigation at 390×844, 768×1024 and
+1440×1000. Specification and quality re-reviews approved the changes. Reset
+launchers now reject ambiguous application URLs, active/test aliases and inherited
+PostgreSQL connection overrides before connection. Environment tests passed 45.
 
-Do not publish yet: formal end-to-end suite, production Redis/SMTP/R2 validation,
-upload lifecycle safeguards, release documentation, CI, and deployment remain.
+Task 14 release documentation, genuine screenshots, MIT license, CI workflow and
+daily Vercel cleanup configuration are drafted. A disposable clean install passed
+frozen-lockfile installation, formatting, lint, type generation/checking, 319 tests
+at that snapshot and production build without local secrets. After the final
+guard regressions, that clean install also passed all 326 unit/component tests
+and rebuilt successfully without local secrets. Fresh dedicated
+native PostgreSQL databases passed migration, seed and all 59 database tests
+sequentially. Docker is unavailable locally, so container/hosted CI execution
+is still unverified. The final local source gate passed 326 unit/component tests
+(59 separate DB tests skipped), formatting, lint, types and production build.
+Unit-only coverage: 55.71% statements / 59.02% lines; DB/browser coverage is not
+merged into that report. A focused private browser run emitted one transient
+development React warning; the final full run had no uncaught browser errors.
+
+Before a public service launch: documentation/CI review, real GitHub CI,
+production Redis/SMTP validation, login/provisioning and production smoke remain.
+Leave optional R2 unset until live storage and upload lifecycle safeguards pass.
 The production limiter rejects requests when Redis is absent or unavailable.
 Outside Vercel, anonymous callers share a conservative bucket; forwarding
 headers are not trusted. No repository has been pushed and no app deployed.
