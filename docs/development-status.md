@@ -82,13 +82,35 @@ This command requires a configured TEST_DATABASE_URL. Without it, the suite skip
 that is not successful database verification. The existing `test:db` command
 still runs only the foundation database suite.
 
-Browser visual acceptance is outstanding. A headless Chrome launch aborted
-inside the sandbox; the isolated-browser permission request was rejected because
-the automatic approval service returned HTTP 503. No alternate execution path
-was used to bypass the rejection. Mobile layout, 200% zoom, light/dark screenshots
-and real keyboard navigation must be checked in a permitted browser before
-claiming the design is complete. The long-title component test checks full text
-and wrap styling; it is not proof of rendered geometry.
+Browser verification became available after the user approved it and the
+permission environment changed. An isolated Chrome 152 profile ran 17 checks:
+the production homepage, real feedback components with explicitly synthetic
+data, desktop and 320/375px layouts, light/dark themes, long-title wrapping,
+empty/validation/loading/quota/pending states, keyboard submission, field-link
+focus and native GET filter navigation. No horizontal overflow was detected in
+the tested normal-size views. Automated WCAG A/AA checks found no violations in
+the scanned states. Screenshots were also visually inspected against the
+approved Impeccable noticeboard direction; no production UI changes were needed.
+
+The component fixture is outside the production app and uses mocked mutation
+responses. It does not prove database persistence, workspace route authorization
+in a browser, or successful demo creation. The actual unconfigured homepage
+correctly displayed a recoverable demo failure. The 200% checks use CSS zoom,
+not native browser zoom; real devices, native zoom and screen-reader acceptance
+remain outstanding. Automated accessibility scans are not full WCAG certification.
+
+Reproduce with an existing Chrome installation and a built app without configured
+demo services (otherwise the homepage failure assertion does not apply):
+
+```sh
+node node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3100
+# In a second terminal; runs a loopback-only component fixture on port 3101:
+node scripts/verify-browser.mjs
+```
+
+Reports and screenshots are generated under ignored `.local/browser-qa/`.
+The script uses a fresh browser context and closes it and the fixture server
+after testing; it does not access existing browser profiles or download tools.
 
 ## Demo endpoints (not ready for public deployment)
 
