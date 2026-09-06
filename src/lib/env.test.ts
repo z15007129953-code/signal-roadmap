@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { assertSafeTestDatabaseUrl, envSchema, parseEnv } from "./env";
 
@@ -166,6 +166,84 @@ describe("environment validation", () => {
 });
 
 describe("destructive test database guard", () => {
+  it("normalizes the active loopback hostname case", () => {
+    expect(() =>
+      assertSafeTestDatabaseUrl(
+        "postgres://local@localhost:5544/signal_test",
+        "postgres://local@LOCALHOST:5544/signal_test",
+      ),
+    ).toThrow();
+  });
+
+  it("refuses ambiguous active database URLs before reset", () => {
+    for (const active of [
+      "postgres://local@localhost:5544",
+      "postgres://local@localhost:5544/signal?host=127.0.0.1",
+    ])
+      expect(() =>
+        assertSafeTestDatabaseUrl(
+          "postgres://local@localhost:5544/signal_test",
+          active,
+        ),
+      ).toThrow();
+  });
+
+  it.each(["PGHOST", "PGHOSTADDR", "PGDATABASE", "PGSERVICE"])(
+    "refuses inherited %s overrides",
+    (key) => {
+      vi.stubEnv(key, "inherited");
+      try {
+        expect(() =>
+          assertSafeTestDatabaseUrl("postgres://local@localhost/signal_test"),
+        ).toThrow("Unset inherited PostgreSQL");
+      } finally {
+        vi.unstubAllEnvs();
+      }
+    },
+  );
+
+  it("refuses inherited PostgreSQL connection overrides during reset", () => {
+    vi.stubEnv("PGPORT", "5544");
+    try {
+      expect(() =>
+        assertSafeTestDatabaseUrl(
+          "postgres://local@localhost:5544/signal_test",
+          "postgres://local@localhost/signal_test",
+        ),
+      ).toThrow();
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
+  it.each([
+    "postgres://other:private@localhost:5432/%73ignal_test",
+    "postgresql://local@127.0.0.1/signal_test",
+    "postgres://local@[::1]/signal_test",
+  ])("rejects the active application database before reset: %s", (active) => {
+    expect(() =>
+      assertSafeTestDatabaseUrl(
+        "postgres://local@127.0.0.1/signal_test",
+        active,
+      ),
+    ).toThrow("Development and test databases must be separate");
+  });
+
+  it("requires a valid active database when a reset launcher supplies it", () => {
+    expect(() =>
+      assertSafeTestDatabaseUrl("postgres://local@localhost/signal_test", ""),
+    ).toThrow();
+  });
+
+  it("allows a separate application database on the same server", () => {
+    expect(
+      assertSafeTestDatabaseUrl(
+        "postgres://local@localhost/signal_test",
+        "postgres://local@localhost/signal",
+      ),
+    ).toBe("postgres://local@localhost/signal_test");
+  });
+
   it.each(["localhost", "127.0.0.1", "[::1]"])(
     "accepts a local test database on %s",
     (host) => {

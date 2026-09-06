@@ -15,7 +15,8 @@ async function run() {
     process.exitCode = 1;
     return;
   }
-  if (command !== "migrate") assertSafeTestDatabaseUrl(url);
+  if (command !== "migrate")
+    assertSafeTestDatabaseUrl(url, process.env.DATABASE_URL ?? "");
   else envSchema.shape.DATABASE_URL.parse(url);
 
   if (command === "test") {

@@ -21,7 +21,34 @@ const optionalValue = z.preprocess(
   z.string().min(1).optional(),
 );
 
-export function assertSafeTestDatabaseUrl(value: string): string {
+function sameDatabase(left: URL, right: URL): boolean {
+  const host = (url: URL) =>
+    ["localhost", "127.0.0.1", "[::1]"].includes(
+      url.hostname.toLowerCase().replace(/\.$/, ""),
+    )
+      ? "loopback"
+      : url.hostname.toLowerCase();
+  return (
+    host(left) === host(right) &&
+    (left.port || "5432") === (right.port || "5432") &&
+    decodedPath(left) !== null &&
+    decodedPath(left) === decodedPath(right)
+  );
+}
+
+export function assertSafeTestDatabaseUrl(
+  value: string,
+  activeDatabaseUrl?: string,
+): string {
+  // Reset targets must not depend on ambient driver connection overrides.
+  if (
+    ["PGHOST", "PGHOSTADDR", "PGPORT", "PGDATABASE", "PGSERVICE"].some(
+      (key) => process.env[key],
+    )
+  )
+    throw new Error(
+      "Unset inherited PostgreSQL connection overrides before reset",
+    );
   const url = new URL(postgresUrl.parse(value));
   const database = decodeURIComponent(url.pathname.slice(1));
   if (
@@ -33,6 +60,22 @@ export function assertSafeTestDatabaseUrl(value: string): string {
     throw new Error(
       "Database reset requires a loopback PostgreSQL URL, a database ending in _test, and no URL parameters",
     );
+  }
+  if (activeDatabaseUrl !== undefined) {
+    const active = new URL(postgresUrl.parse(activeDatabaseUrl));
+    if (
+      !["localhost", "127.0.0.1", "[::1]"].includes(
+        active.hostname.toLowerCase().replace(/\.$/, ""),
+      ) ||
+      !/^\/[a-zA-Z0-9_]+$/.test(decodedPath(active) ?? "") ||
+      active.search ||
+      active.hash
+    )
+      throw new Error(
+        "Reset requires an explicit loopback application database without URL parameters",
+      );
+    if (sameDatabase(active, url))
+      throw new Error("Development and test databases must be separate");
   }
   return value;
 }
@@ -99,16 +142,7 @@ export const envSchema = z
       }
       const development = new URL(env.DATABASE_URL);
       const test = new URL(env.TEST_DATABASE_URL);
-      const host = (url: URL) =>
-        ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)
-          ? "loopback"
-          : url.hostname;
-      if (
-        host(development) === host(test) &&
-        (development.port || "5432") === (test.port || "5432") &&
-        decodedPath(development) !== null &&
-        decodedPath(development) === decodedPath(test)
-      ) {
+      if (sameDatabase(development, test)) {
         context.addIssue({
           code: "custom",
           path: ["TEST_DATABASE_URL"],

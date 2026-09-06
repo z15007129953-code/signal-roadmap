@@ -14,7 +14,9 @@ import { createDemoRepository } from "@/features/auth/demo-repository";
 const url = process.env.TEST_DATABASE_URL;
 describe.skipIf(!url)("PostgreSQL tenant integrity", () => {
   const connection = url
-    ? createDatabase(assertSafeTestDatabaseUrl(url))
+    ? createDatabase(
+        assertSafeTestDatabaseUrl(url, process.env.DATABASE_URL ?? ""),
+      )
     : undefined;
   const db = connection?.db;
   const workspaceA = randomUUID();
