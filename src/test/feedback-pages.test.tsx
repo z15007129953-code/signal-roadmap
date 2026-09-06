@@ -7,14 +7,19 @@ import DetailPage from "@/app/[workspace]/feedback/[slug]/page";
 import { ok, err } from "@/lib/http/result";
 import { domainError } from "@/lib/http/errors";
 import { loadFeedbackContext } from "@/lib/feedback-runtime";
+import { moderationService } from "@/lib/moderation-runtime";
 import type { FeedbackContext } from "@/lib/feedback-context";
 
 vi.mock("@/lib/feedback-runtime", () => ({ loadFeedbackContext: vi.fn() }));
 vi.mock("@/lib/engagement-runtime", () => ({ engagementServices: vi.fn() }));
+vi.mock("@/lib/moderation-runtime", () => ({ moderationService: vi.fn() }));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: vi.fn() }),
   notFound: () => {
     throw new Error("NOT_FOUND");
+  },
+  permanentRedirect: (url: string) => {
+    throw new Error(`REDIRECT:${url}`);
   },
 }));
 const boardId = "00000000-0000-4000-8000-000000000001";
@@ -45,6 +50,10 @@ const context: FeedbackContext = {
   service,
 };
 beforeEach(() => {
+  vi.mocked(moderationService).mockReturnValue({
+    redirect: vi.fn().mockResolvedValue(ok(null)),
+    history: vi.fn().mockResolvedValue(ok({ items: [], nextCursor: null })),
+  } as unknown as ReturnType<typeof moderationService>);
   vi.mocked(loadFeedbackContext).mockResolvedValue(ok(context));
   service.list.mockResolvedValue(ok({ items: [], nextCursor: null }));
   service.taxonomy.mockResolvedValue(ok(taxonomy));
@@ -135,4 +144,16 @@ it("renders authorized pending detail through the workspace service", async () =
   expect(
     screen.getByRole("heading", { name: "Awaiting review" }),
   ).toBeInTheDocument();
+});
+it("resolves a scoped merge redirect before loading the removed detail", async () => {
+  vi.mocked(moderationService).mockReturnValue({
+    redirect: vi.fn().mockResolvedValue(ok({ slug: "kept-idea" })),
+  } as unknown as ReturnType<typeof moderationService>);
+  await expect(
+    DetailPage({
+      params: Promise.resolve({ workspace: "demo", slug: "old-idea" }),
+      searchParams: Promise.resolve({}),
+    }),
+  ).rejects.toThrow("REDIRECT:/demo/feedback/kept-idea");
+  expect(service.detail).not.toHaveBeenCalled();
 });

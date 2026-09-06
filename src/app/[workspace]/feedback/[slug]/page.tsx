@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { loadFeedbackContext } from "@/lib/feedback-runtime";
 import { FeedbackDetail } from "@/components/feedback/feedback-views";
 import {
@@ -9,10 +9,14 @@ import { feedbackPath } from "@/components/feedback/paths";
 import { engagementServices } from "@/lib/engagement-runtime";
 import { EngagementControls } from "@/components/feedback/engagement-controls";
 import { CommentThread } from "@/components/feedback/comment-thread";
+import { moderationService } from "@/lib/moderation-runtime";
+import { ModerationPanel } from "@/components/moderation/moderation-panel";
+import { MergedHistory } from "@/components/moderation/merged-history";
 
 export const dynamic = "force-dynamic";
 export default async function FeedbackDetailPage({
   params,
+  searchParams,
 }: PageProps<"/[workspace]/feedback/[slug]">) {
   const path = await params;
   const context = await loadFeedbackContext(path.workspace);
@@ -21,12 +25,37 @@ export default async function FeedbackDetailPage({
     return <FeedbackAccessNotice code={context.error.code} />;
   }
   const { workspace, actor, service } = context.value;
+  const moderation = moderationService();
+  const redirect = await moderation.redirect(actor, workspace.id, path.slug);
+  if (!redirect.ok) return <FeedbackAccessNotice code={redirect.error.code} />;
+  if (redirect.value)
+    permanentRedirect(
+      `${feedbackPath(workspace.slug)}/${encodeURIComponent(redirect.value.slug)}`,
+    );
   const detail = await service.detail(actor, workspace.id, path.slug);
   if (!detail.ok) {
     if (detail.error.code === "NOT_FOUND") notFound();
     return <FeedbackAccessNotice code={detail.error.code} />;
   }
   let discussion = null;
+  let earlierConversations = null;
+  let moderatorTools = null;
+  if (actor && actor.role !== "member") {
+    const [taxonomy, selection] = await Promise.all([
+      service.taxonomy(actor, workspace.id),
+      moderation.taxonomySelection(actor, workspace.id, detail.value.id),
+    ]);
+    if (taxonomy.ok && selection.ok)
+      moderatorTools = (
+        <ModerationPanel
+          key={`${detail.value.id}-${detail.value.visibility}-${detail.value.status}-${selection.value.tagIds.join(",")}`}
+          workspace={workspace.slug}
+          item={detail.value}
+          taxonomy={taxonomy.value}
+          tagIds={selection.value.tagIds}
+        />
+      );
+  }
   if (detail.value.visibility === "published") {
     const { engagement } = engagementServices();
     const [state, comments] = await Promise.all([
@@ -56,6 +85,24 @@ export default async function FeedbackDetailPage({
           Discussion is not available for this feedback.
         </p>
       );
+    const search = await searchParams;
+    const history = await moderation.history(
+      actor,
+      workspace.id,
+      detail.value.id,
+      search.historyCursor ? { cursor: search.historyCursor } : {},
+    );
+    earlierConversations = history.ok ? (
+      <MergedHistory
+        page={history.value}
+        detailPath={`${feedbackPath(workspace.slug)}/${encodeURIComponent(path.slug)}`}
+      />
+    ) : (
+      <p className="mt-8 text-muted">
+        Earlier conversations could not be loaded. Return to this feedback
+        without the history filter and try again.
+      </p>
+    );
   }
   return (
     <WorkspaceShell
@@ -69,7 +116,9 @@ export default async function FeedbackDetailPage({
         Back to feedback
       </a>
       <FeedbackDetail item={detail.value} />
+      {moderatorTools}
       {discussion}
+      {earlierConversations}
     </WorkspaceShell>
   );
 }

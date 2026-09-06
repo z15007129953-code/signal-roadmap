@@ -34,7 +34,7 @@ has been published. Release each completed product publicly; use Chrome for logi
 - Strict title/body/taxonomy input validation, readable UUID-suffixed slugs,
   persisted membership and role checks, and an atomic 30-feedback demo quota.
 - Published lists, author/moderator-only pending details, a read-only moderator
-  queue, and private demo reads. Publishing/moderation actions come in a later task.
+  queue, and private demo reads. Moderators can approve, close and merge items.
 - Board/tag/status/literal-title filters and descending timestamp/ID pagination.
   Cursor validation preserves PostgreSQL microseconds and rejects impossible dates.
 - Up to three optional similar-title suggestions. A failed or stale suggestion
@@ -50,8 +50,7 @@ has been published. Release each completed product publicly; use Chrome for logi
 ## Not yet implemented
 
 Full showcase seeding, remaining write quotas and request-rate enforcement,
-moderation actions, roadmap/changelog, settings, the full moderation acceptance
-journey, CI and deployment. The other three products
+roadmap/changelog, settings, the full release acceptance journey, CI and deployment. The other three products
 and portfolio hub remain unimplemented.
 
 ## Engagement and notifications
@@ -68,10 +67,29 @@ and portfolio hub remain unimplemented.
   discussion for the new member. HTTP endpoints require exact Origin for writes,
   bounded JSON where relevant, no-store responses and safe infrastructure errors.
 
+## Moderation
+
+- Private review queue, approve/close, persisted-role status/taxonomy updates,
+  explicit merge confirmation containing both titles and source/target comparison.
+- Serializable merge with workspace-first, ordered feedback locks; votes/follows
+  deduplicate on target, merged sources reject edits, redirects flatten after
+  repeated merges, and original comment authors/deletion state remain visible
+  in paginated read-only history. Both source and target must be published.
+- Activity contains safe IDs/status metadata, not deleted comment bodies.
+  Status notifications are idempotent for unchanged status; merge notifications
+  cover affected voters/followers and exclude the acting moderator.
+- `node scripts/verify-persisted-moderation.mjs` passes four grouped real-browser
+  checks: private pending submission then approval, merge/vote/history/redirect,
+  persisted completed status, and 375/1440px automated accessibility/width checks.
+  Screenshots were visually inspected; artifacts are in `.local/moderation-qa`.
+- Run database tests separately with `MODERATION_DATABASE_TEST=1` and the same
+  command pattern as engagement tests, targeting `src/test/moderation-database.test.ts`.
+
 ## Local verification and limitations
 
-Latest functional gate: 234 unit/component tests passed. Separately, all 33 real
-PostgreSQL cases passed (17 foundations, 7 feedback, 9 engagement). TypeScript,
+Latest functional gate: 248 unit/component tests
+passed. Separately, all 41 real PostgreSQL cases passed (17 foundations,
+7 feedback, 9 engagement, 8 moderation). TypeScript,
 ESLint and the webpack production build passed. The
 dedicated database command correctly exited with failure when TEST_DATABASE_URL
 was absent. Auth logging and malformed-URL validation have regression coverage

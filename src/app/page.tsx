@@ -75,8 +75,9 @@ export default function Home() {
         <p className="max-w-prose">
           Try feedback submission, voting, following, comments and notifications
           in a private workspace. Switch to moderator view to publish a new idea
-          immediately. Approval, merging, roadmap and changelog tools are still
-          being built; this preview is not a public production service.
+          immediately, approve submissions, merge duplicates and change status.
+          Roadmap and changelog views are still being built; this preview is not
+          a public production service.
         </p>
       </footer>
     </div>

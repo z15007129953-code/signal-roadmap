@@ -42,7 +42,7 @@ export function WorkspaceShell({
           {moderator && (
             <a
               className="py-2 underline"
-              href={`${feedbackPath(workspace.slug)}?visibility=pending`}
+              href={`/${encodeURIComponent(workspace.slug)}/admin/moderation`}
             >
               Review queue
             </a>
