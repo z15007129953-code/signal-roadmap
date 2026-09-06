@@ -230,6 +230,8 @@ export function createFeedbackRepository(db: Database): FeedbackRepository {
           name: workspaces.name,
           description: workspaces.description,
           isDemo: workspaces.isDemo,
+          logoKey: workspaces.logoKey,
+          accentColor: workspaces.accentColor,
         })
         .from(workspaces)
         .where(eq(workspaces.slug, slug))

@@ -49,8 +49,8 @@ has been published. Release each completed product publicly; use Chrome for logi
 
 ## Not yet implemented
 
-Full showcase seeding, remaining write quotas and request-rate enforcement,
-settings, the full release acceptance journey, CI and deployment. The other three products
+Full showcase seeding, request-rate enforcement,
+the full release acceptance journey, CI and deployment. The other three products
 and portfolio hub remain unimplemented.
 
 ## Engagement and notifications
@@ -109,11 +109,39 @@ and portfolio hub remain unimplemented.
   `src/lib/changelog-http.test.ts`, and opt-in `src/test/roadmap-database.test.ts`;
   there are no tests directly under `src/features/roadmap`.
 
-## Verification detail
+## Workspace administration
 
-Latest functional gate: 259 unit/component tests
-passed. Separately, all 50 real PostgreSQL cases passed (17 foundations,
-7 feedback, 9 engagement, 8 moderation, 8 roadmap/changelog, 1 release inbox). TypeScript,
+- Owner branding, safe member search/pagination and role changes, persisted-role
+  checks and serialized last-owner protection. Membership rows preserve authored
+  content. Moderators manage boards/tags; member access is denied. Demo identities
+  cannot change membership roles; demo caps are ten boards and thirty tags.
+- Board deletion refuses any linked feedback; tag names/addresses are unique
+  case-insensitively. Native confirmations name the target; failed forms retain
+  input and focus an error message. Member search survives pagination.
+- The shell shows saved description, optional logo and a small accent marker;
+  arbitrary accent choices do not replace readable text/control colors.
+- Optional R2 uploads use scoped server-selected UUID keys, signed content type
+  and content length, five-minute expiry, and metadata revalidation before attach.
+  SVG goes through a same-origin proxy with sandbox/default-none CSP and nosniff.
+  SDK automatic empty-payload checksums are disabled for browser presigning, with
+  a regression. R2 is not configured: real upload/CORS remains an explicit release
+  gate, not a verified feature. Configure bucket CORS for the exact APP_URL, PUT,
+  Content-Type and Content-Length. Keep the bucket private. Orphan/replaced objects
+  require a lifecycle/cleanup policy before enabling uploads publicly.
+- `node scripts/verify-persisted-settings.mjs` passes four grouped real Chrome
+  checks: persisted taxonomy creation, three-view accessibility/overflow, protected
+  board and tag deletion, and revoked member access. The separate
+  `node --env-file=.env.local scripts/verify-owner-settings.mjs` creates temporary
+  local-only account fixtures, verifies saved branding, member promotion and
+  last-owner rejection at 390/768/1440px, then removes exactly those fixtures.
+  It bypasses email delivery only for that isolated local test; no production
+  bypass is installed. Screenshots inspected under `.local/settings-qa`.
+
+## Verification evidence
+
+Latest functional gate: 278 unit/component tests
+passed. Separately, all 55 real PostgreSQL cases passed (17 foundations,
+7 feedback, 9 engagement, 8 moderation, 8 roadmap/changelog, 1 release inbox, 5 settings). TypeScript,
 ESLint and the webpack production build passed. The
 dedicated database command correctly exited with failure when TEST_DATABASE_URL
 was absent. Auth logging and malformed-URL validation have regression coverage

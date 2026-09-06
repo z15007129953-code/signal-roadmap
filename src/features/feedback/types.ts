@@ -41,6 +41,8 @@ export type FeedbackWorkspace = {
   name: string;
   description: string | null;
   isDemo: boolean;
+  logoKey?: string | null;
+  accentColor?: string | null;
 };
 export type FeedbackActor = WorkspaceActor | null | undefined;
 /** Implementations authorize using current persisted membership on every read/write. */

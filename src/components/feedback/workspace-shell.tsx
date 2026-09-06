@@ -54,6 +54,14 @@ export function WorkspaceShell({
           {moderator && (
             <a
               className="py-2 underline"
+              href={`/${encodeURIComponent(workspace.slug)}/admin/settings`}
+            >
+              Settings
+            </a>
+          )}
+          {moderator && (
+            <a
+              className="py-2 underline"
               href={`/${encodeURIComponent(workspace.slug)}/admin/changelog`}
             >
               Write a release
@@ -80,9 +88,37 @@ export function WorkspaceShell({
         </aside>
       )}
       <main id="main" className="py-8 sm:py-12">
-        <p className="mb-8 text-sm font-semibold tracking-wide [overflow-wrap:anywhere]">
-          {workspace.name}
-        </p>
+        <div className="mb-8 grid gap-3">
+          <div className="flex items-center gap-3">
+            {workspace.logoKey && (
+              // A scoped route serves SVG with sandbox headers, never the image optimizer.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={`/api/workspaces/${encodeURIComponent(workspace.slug)}/logo?v=${encodeURIComponent(workspace.logoKey)}`}
+                alt={`${workspace.name} logo`}
+                width={40}
+                height={40}
+                className="h-10 w-10 object-contain"
+              />
+            )}
+            {workspace.accentColor &&
+              /^#[0-9a-f]{6}$/i.test(workspace.accentColor) && (
+                <span
+                  aria-hidden="true"
+                  className="h-3 w-3 shrink-0 rounded-full"
+                  style={{ backgroundColor: workspace.accentColor }}
+                />
+              )}
+            <p className="text-sm font-semibold tracking-wide [overflow-wrap:anywhere]">
+              {workspace.name}
+            </p>
+          </div>
+          {workspace.description && (
+            <p className="max-w-prose text-sm text-muted [overflow-wrap:anywhere]">
+              {workspace.description}
+            </p>
+          )}
+        </div>
         {children}
       </main>
       <footer className="mt-8 border-t border-rule py-6 text-sm text-muted">
