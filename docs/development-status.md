@@ -50,7 +50,7 @@ has been published. Release each completed product publicly; use Chrome for logi
 ## Not yet implemented
 
 Full showcase seeding, remaining write quotas and request-rate enforcement,
-roadmap/changelog, settings, the full release acceptance journey, CI and deployment. The other three products
+settings, the full release acceptance journey, CI and deployment. The other three products
 and portfolio hub remain unimplemented.
 
 ## Engagement and notifications
@@ -85,11 +85,35 @@ and portfolio hub remain unimplemented.
 - Run database tests separately with `MODERATION_DATABASE_TEST=1` and the same
   command pattern as engagement tests, targeting `src/test/moderation-database.test.ts`.
 
-## Local verification and limitations
+## Roadmap and releases
 
-Latest functional gate: 248 unit/component tests
-passed. Separately, all 41 real PostgreSQL cases passed (17 foundations,
-7 feedback, 9 engagement, 8 moderation). TypeScript,
+- Public feedback is grouped into five textual status sections with stable
+  manual-rank/time/ID pagination; phone layouts stack sections vertically.
+- Moderator-only drafts, optional summaries, safe Markdown, explicit timestamped
+  publication, immutable published releases, completed-feedback links, and
+  deduplicated follower notifications are persisted. Cross-workspace IDs and
+  stale roles are rejected; demo publication respects expiry and the ten-entry cap.
+- Editor retains selected links beyond the initial search page, refreshes saved
+  drafts, keeps content on failures, and explains how to reconcile stale links.
+- Independent specification and quality reviews were performed. The latter found
+  a stale-link recovery issue; explicit recovery guidance and regression tests
+  were added before re-review.
+- `node scripts/verify-persisted-release.mjs` passes four grouped Chrome checks:
+  completed roadmap, draft/publication persistence, follower release destination,
+  and member permission controls. 375/1440px accessibility/overflow scans pass;
+  screenshots were visually inspected in `.local/release-qa`.
+- Repeated development hot reload exposed PostgreSQL pool accumulation. A
+  process-global development pool now survives module reloads; a regression test
+  verifies object reuse, and the persisted browser journey passes after restart.
+- Feature verification lives across `src/components/roadmap`,
+  `src/lib/changelog-http.test.ts`, and opt-in `src/test/roadmap-database.test.ts`;
+  there are no tests directly under `src/features/roadmap`.
+
+## Verification detail
+
+Latest functional gate: 259 unit/component tests
+passed. Separately, all 50 real PostgreSQL cases passed (17 foundations,
+7 feedback, 9 engagement, 8 moderation, 8 roadmap/changelog, 1 release inbox). TypeScript,
 ESLint and the webpack production build passed. The
 dedicated database command correctly exited with failure when TEST_DATABASE_URL
 was absent. Auth logging and malformed-URL validation have regression coverage
@@ -152,8 +176,8 @@ reload, switch member, post/edit/reload a comment, switch moderator, read a
 notification and reload, then verify a separate browser cannot read the demo.
 All six grouped checks pass. Real discussion scans at 375/1440px found no
 automated A/AA violations or horizontal overflow; screenshots were inspected.
-Artifacts are ignored under `.local/persisted-qa/`. The complete moderation,
-roadmap and changelog acceptance journey remains outstanding.
+Artifacts are ignored under `.local/persisted-qa/`. A combined seeded end-to-end
+journey remains outstanding; individual moderation and release journeys now pass.
 
 ## Demo endpoints (not ready for public deployment)
 
@@ -170,7 +194,7 @@ batch; repeat for a backlog. No scheduler or paid resource has been configured.
 Database/configuration failures return a generic 503 without credential details.
 Rate limits and the remaining write quotas are still required before exposing
 these endpoints publicly. Feedback creation now enforces its 30-item demo quota;
-comment quota is enforced; changelog quota and request-rate enforcement remain.
+comment and ten-entry changelog quotas are enforced; request-rate enforcement remains.
 
 PostgreSQL 17.11 was checksum-verified and built into ignored `.local/postgres`,
 without global installation. Two password-protected clusters listen only on

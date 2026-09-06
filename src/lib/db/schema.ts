@@ -69,6 +69,7 @@ export const notificationType = pgEnum("notification_type", [
   "status_changed",
   "comment_added",
   "feedback_merged",
+  "changelog_published",
 ]);
 
 export const workspaces = pgTable("workspaces", {

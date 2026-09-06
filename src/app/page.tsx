@@ -76,8 +76,9 @@ export default function Home() {
           Try feedback submission, voting, following, comments and notifications
           in a private workspace. Switch to moderator view to publish a new idea
           immediately, approve submissions, merge duplicates and change status.
-          Roadmap and changelog views are still being built; this preview is not
-          a public production service.
+          Explore the roadmap and publish release notes linked to completed
+          ideas. Workspace settings and launch safeguards are still being built;
+          this preview is not a public production service.
         </p>
       </footer>
     </div>

@@ -50,3 +50,26 @@ it("keeps unread state when saving fails", async () => {
   expect(screen.getByRole("status")).toHaveTextContent("1 unread");
   expect(screen.getByRole("alert")).toBeInTheDocument();
 });
+it("links published release notifications to the changelog", () => {
+  render(
+    <NotificationInbox
+      workspace="demo"
+      initial={{
+        ...initial,
+        items: [
+          {
+            ...initial.items[0],
+            feedbackId: null,
+            feedbackSlug: null,
+            changelogSlug: "first-release",
+            type: "changelog_published",
+          },
+        ],
+      }}
+    />,
+  );
+  expect(screen.getByRole("link", { name: "Better search" })).toHaveAttribute(
+    "href",
+    "/demo/changelog/first-release",
+  );
+});

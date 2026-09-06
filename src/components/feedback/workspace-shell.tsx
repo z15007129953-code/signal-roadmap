@@ -35,10 +35,30 @@ export function WorkspaceShell({
           </a>
           <a
             className="py-2 underline"
+            href={`/${encodeURIComponent(workspace.slug)}/roadmap`}
+          >
+            Roadmap
+          </a>
+          <a
+            className="py-2 underline"
+            href={`/${encodeURIComponent(workspace.slug)}/changelog`}
+          >
+            Changelog
+          </a>
+          <a
+            className="py-2 underline"
             href={`/${encodeURIComponent(workspace.slug)}/notifications`}
           >
             Notifications
           </a>
+          {moderator && (
+            <a
+              className="py-2 underline"
+              href={`/${encodeURIComponent(workspace.slug)}/admin/changelog`}
+            >
+              Write a release
+            </a>
+          )}
           {moderator && (
             <a
               className="py-2 underline"

@@ -5,7 +5,12 @@ export type NotificationItem = {
   id: string;
   feedbackId: string | null;
   feedbackSlug: string | null;
-  type: "comment_added" | "status_changed" | "feedback_merged";
+  changelogSlug?: string | null;
+  type:
+    | "comment_added"
+    | "status_changed"
+    | "feedback_merged"
+    | "changelog_published";
   title: string;
   body: string | null;
   createdAt: Date;

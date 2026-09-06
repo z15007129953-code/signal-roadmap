@@ -1,7 +1,7 @@
 import { and, count, desc, eq, exists, isNull, lt, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import type { Database } from "@/lib/db";
-import { feedback, notifications } from "@/lib/db/schema";
+import { feedback, notifications, changelogEntries } from "@/lib/db/schema";
 import { domainError } from "@/lib/http/errors";
 import { err, ok } from "@/lib/http/result";
 import {
@@ -14,17 +14,31 @@ import type { NotificationRepository } from "./notification-types";
 
 /** Suppress notifications for content no longer public, even if visibility changed after fanout. */
 function visible(db: EngagementExecutor) {
-  return exists(
-    db
-      .select({ id: feedback.id })
-      .from(feedback)
-      .where(
-        and(
-          eq(feedback.workspaceId, notifications.workspaceId),
-          eq(feedback.id, notifications.feedbackId),
-          eq(feedback.visibility, "published"),
+  return or(
+    exists(
+      db
+        .select({ id: feedback.id })
+        .from(feedback)
+        .where(
+          and(
+            eq(feedback.workspaceId, notifications.workspaceId),
+            eq(feedback.id, notifications.feedbackId),
+            eq(feedback.visibility, "published"),
+          ),
         ),
-      ),
+    ),
+    exists(
+      db
+        .select({ id: changelogEntries.id })
+        .from(changelogEntries)
+        .where(
+          and(
+            eq(changelogEntries.workspaceId, notifications.workspaceId),
+            eq(changelogEntries.id, notifications.changelogEntryId),
+            sql`${changelogEntries.publishedAt} IS NOT NULL`,
+          ),
+        ),
+    ),
   );
 }
 export function createNotificationRepository(
@@ -55,6 +69,7 @@ export function createNotificationRepository(
           id: notifications.id,
           feedbackId: notifications.feedbackId,
           feedbackSlug: feedback.slug,
+          changelogSlug: changelogEntries.slug,
           type: notifications.type,
           title: notifications.title,
           body: notifications.body,
@@ -68,6 +83,13 @@ export function createNotificationRepository(
           and(
             eq(feedback.workspaceId, notifications.workspaceId),
             eq(feedback.id, notifications.feedbackId),
+          ),
+        )
+        .leftJoin(
+          changelogEntries,
+          and(
+            eq(changelogEntries.workspaceId, notifications.workspaceId),
+            eq(changelogEntries.id, notifications.changelogEntryId),
           ),
         )
         .where(
@@ -97,6 +119,7 @@ export function createNotificationRepository(
           id: item.id,
           feedbackId: item.feedbackId,
           feedbackSlug: item.feedbackSlug,
+          changelogSlug: item.changelogSlug,
           type: item.type,
           title: item.title,
           body: item.body,

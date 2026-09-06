@@ -10,9 +10,18 @@ export function createDatabase(url: string) {
 }
 
 export type Database = ReturnType<typeof createDatabase>["db"];
-let connection: ReturnType<typeof createDatabase> | undefined;
+type Connection = ReturnType<typeof createDatabase>;
+const databaseGlobal = globalThis as typeof globalThis & {
+  signalRoadmapConnection?: Connection;
+};
+let connection: Connection | undefined;
 
 export function getDatabase(): Database {
-  connection ??= createDatabase(getEnv().DATABASE_URL);
+  // Next development reloads modules; retain one pool across those reloads.
+  connection ??=
+    databaseGlobal.signalRoadmapConnection ??
+    createDatabase(getEnv().DATABASE_URL);
+  if (process.env.NODE_ENV !== "production")
+    databaseGlobal.signalRoadmapConnection = connection;
   return connection.db;
 }

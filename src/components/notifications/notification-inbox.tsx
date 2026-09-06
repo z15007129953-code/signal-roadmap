@@ -95,7 +95,14 @@ export function NotificationInbox({
                   })}
                 </p>
                 <h2 className="text-xl font-semibold">
-                  {item.feedbackSlug ? (
+                  {item.changelogSlug ? (
+                    <a
+                      href={`/${encodeURIComponent(workspace)}/changelog/${encodeURIComponent(item.changelogSlug)}`}
+                      className="py-2 underline"
+                    >
+                      {item.title}
+                    </a>
+                  ) : item.feedbackSlug ? (
                     <a
                       href={`/${encodeURIComponent(workspace)}/feedback/${encodeURIComponent(item.feedbackSlug)}`}
                       className="py-2 underline"
