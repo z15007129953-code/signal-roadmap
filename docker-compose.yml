@@ -1,0 +1,34 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: signal_local
+      POSTGRES_PASSWORD: ${LOCAL_POSTGRES_PASSWORD:?Set a local-only database password}
+      POSTGRES_DB: signal
+    ports:
+      - "127.0.0.1:54329:5432"
+    volumes:
+      - signal_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U signal_local -d signal"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  postgres-test:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: signal_local
+      POSTGRES_PASSWORD: ${LOCAL_POSTGRES_PASSWORD:?Set a local-only database password}
+      POSTGRES_DB: signal_test
+    ports:
+      - "127.0.0.1:54330:5432"
+    volumes:
+      - signal_postgres_test:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U signal_local -d signal_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+volumes:
+  signal_postgres:
+  signal_postgres_test:

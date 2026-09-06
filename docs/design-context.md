@@ -87,3 +87,60 @@ and provide 44px touch targets where practical.
 5. **Empty states teach.** Every empty state explains the next useful action.
 6. **Empty states stay truthful.** Never invent activity, momentum, or social
    proof when no activity exists.
+
+## Token and utility contract
+
+`src/styles/tokens.css` owns the source values and their explicit system-dark
+overrides. `src/app/globals.css` exposes those values through Tailwind's
+`@theme inline` aliases; components should use the semantic utilities below.
+CSS modules may reference the source variables directly. Do not duplicate color
+values inside components.
+
+| Source token              | Example Tailwind utility   | Role                          |
+| ------------------------- | -------------------------- | ----------------------------- |
+| `--color-canvas`          | `bg-background`            | Page canvas                   |
+| `--color-surface`         | `bg-panel`                 | Primary surface               |
+| `--color-surface-raised`  | `bg-panel-raised`          | Raised surface                |
+| `--color-surface-muted`   | `bg-panel-muted`           | Muted surface                 |
+| `--color-text`            | `text-foreground`          | Primary text                  |
+| `--color-text-muted`      | `text-muted`               | Secondary text                |
+| `--color-border`          | `border-rule`              | Decorative separators only    |
+| `--color-border-control`  | `border-control`           | Meaningful control boundaries |
+| `--color-accent`          | `bg-action`, `text-action` | Primary actions and links     |
+| `--color-accent-contrast` | `text-action-foreground`   | Text on an action fill        |
+| `--color-focus`           | `outline-ring`             | Keyboard focus indicator      |
+| `--color-danger`          | `text-critical`            | Destructive or error text     |
+| `--status-under-review`   | `text-status-under-review` | Under review                  |
+| `--status-planned`        | `text-status-planned`      | Planned                       |
+| `--status-in-progress`    | `text-status-in-progress`  | In progress                   |
+| `--status-completed`      | `text-status-completed`    | Completed                     |
+| `--status-closed`         | `text-status-closed`       | Closed                        |
+| `--font-body`             | `font-sans`                | Body and interface text       |
+| `--font-display`          | `font-serif`               | Editorial headings            |
+| `--font-code`             | `font-mono`                | Code and machine identifiers  |
+
+Normal text (including status labels and action foregrounds) must reach 4.5:1
+contrast. Control borders and focus indicators must reach 3:1 against the
+canvas and all three surfaces in both themes. Native controls receive the
+control-border default in the base layer; custom interactive elements should
+use `border-control` explicitly. Decorative `border-rule` separators do not
+meet the control threshold and must not be used as the only visible boundary
+of a control. Status colors are validated as text on neutral surfaces, not as
+arbitrary colored badge backgrounds, and still require readable labels.
+
+The spacing, font-size, line-height, radius, shadow, and motion variables in
+`tokens.css` are currently source CSS tokens. They are not custom Tailwind
+theme mappings: use `var(...)` in CSS or an explicit arbitrary-value utility
+when these semantic values are needed. Tailwind's built-in scale is separate.
+
+### Intentional font fallback at this foundation stage
+
+The starter's remote Geist and Geist Mono loaders have been removed so builds
+do not require a Google Fonts connection. Body text falls back to Segoe UI/sans-serif, code to
+SFMono-Regular/Consolas/monospace, and display text to locally available
+Charter/Bitstream Charter/Georgia/serif. Charter is not bundled, so its exact
+appearance depends on the device. This is an intentional temporary foundation
+choice; final brand font selection and self-hosted assets belong to the
+product-screen design phase. No new font downloads or homepage redesign are
+part of this foundation change. Optional font variables include CSS fallbacks,
+so an absent custom font cannot invalidate the entire font-family declaration.

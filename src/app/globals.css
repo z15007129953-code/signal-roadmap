@@ -9,9 +9,16 @@
   --color-panel-muted: var(--color-surface-muted);
   --color-muted: var(--color-text-muted);
   --color-rule: var(--color-border);
+  --color-control: var(--color-border-control);
   --color-action: var(--color-accent);
+  --color-action-foreground: var(--color-accent-contrast);
   --color-ring: var(--color-focus);
   --color-critical: var(--color-danger);
+  --color-status-under-review: var(--status-under-review);
+  --color-status-planned: var(--status-planned);
+  --color-status-in-progress: var(--status-in-progress);
+  --color-status-completed: var(--status-completed);
+  --color-status-closed: var(--status-closed);
   --font-sans: var(--font-body);
   --font-serif: var(--font-display);
   --font-mono: var(--font-code);
@@ -21,7 +28,6 @@
 *::before,
 *::after {
   box-sizing: border-box;
-  border-color: var(--color-border);
 }
 
 html {
@@ -52,17 +58,33 @@ body {
   outline-offset: 3px;
 }
 
-a,
-button,
-input,
-select,
-textarea {
-  font: inherit;
-}
+/* Keep defaults in the base layer so explicit component utilities win. */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    border-color: var(--color-border);
+  }
 
-a {
-  color: inherit;
-  text-underline-offset: 0.18em;
+  a,
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  a {
+    color: inherit;
+    text-underline-offset: 0.18em;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    border-color: var(--color-border-control);
+  }
 }
 
 button,

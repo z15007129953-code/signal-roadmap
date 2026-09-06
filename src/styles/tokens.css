@@ -9,21 +9,23 @@
   --color-text: oklch(0.235 0.022 48);
   --color-text-muted: oklch(0.47 0.024 54);
   --color-border: oklch(0.825 0.024 72);
-  --color-accent: oklch(0.65 0.185 38);
+  /* Decorative rules stay quiet; control boundaries remain distinguishable. */
+  --color-border-control: oklch(0.6 0.024 72);
+  --color-accent: oklch(0.54 0.17 38);
   --color-accent-contrast: oklch(0.985 0.01 82);
   --color-focus: oklch(0.5 0.17 245);
-  --color-danger: oklch(0.56 0.19 25);
+  --color-danger: oklch(0.54 0.19 25);
 
   /* Status color always accompanies a readable label and non-color cue. */
-  --status-under-review: oklch(0.56 0.12 255);
-  --status-planned: oklch(0.55 0.14 305);
-  --status-in-progress: oklch(0.67 0.14 73);
-  --status-completed: oklch(0.53 0.13 155);
+  --status-under-review: oklch(0.5 0.12 255);
+  --status-planned: oklch(0.51 0.14 305);
+  --status-in-progress: oklch(0.49 0.1 73);
+  --status-completed: oklch(0.5 0.13 155);
   --status-closed: oklch(0.5 0.035 62);
 
-  --font-body: var(--font-geist-sans), "Segoe UI", sans-serif;
+  --font-body: var(--font-geist-sans, "Segoe UI"), sans-serif;
   --font-display: Charter, "Bitstream Charter", Georgia, serif;
-  --font-code: var(--font-geist-mono), "SFMono-Regular", Consolas, monospace;
+  --font-code: var(--font-geist-mono, "SFMono-Regular"), Consolas, monospace;
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
@@ -67,6 +69,7 @@
     --color-text: oklch(0.92 0.018 80);
     --color-text-muted: oklch(0.73 0.025 75);
     --color-border: oklch(0.39 0.028 65);
+    --color-border-control: oklch(0.6 0.024 72);
     --color-accent: oklch(0.72 0.16 40);
     --color-accent-contrast: oklch(0.205 0.02 50);
     --color-focus: oklch(0.75 0.13 240);
