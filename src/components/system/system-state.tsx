@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
+import { parseLocale, LOCALE_COOKIE } from "@/lib/i18n";
 
 const states = {
   unexpected: [
@@ -45,6 +46,45 @@ export function SystemState({
     heading.current?.focus();
   }, [kind]);
   const [title, message] = states[kind];
+  const locale =
+    typeof document === "undefined"
+      ? "en"
+      : parseLocale(
+          document.cookie
+            .split(";")
+            .map((part) => part.trim())
+            .find((part) => part.startsWith(`${LOCALE_COOKIE}=`))
+            ?.split("=")[1],
+        );
+  const translated =
+    locale === "zh"
+      ? {
+          unexpected: [
+            "页面暂时无法打开。",
+            "请重新加载页面。如果问题仍然存在，请保留下面的参考编号。",
+          ],
+          expired: [
+            "体验空间已过期。",
+            "这个反馈空间有效期为 24 小时，请从首页重新开始。",
+          ],
+          forbidden: [
+            "你无法访问此页面。",
+            "请登录工作区账号，或从首页开始新的体验。",
+          ],
+          "not-found": [
+            "找不到这个页面。",
+            "链接可能不完整或页面已移动，请返回首页。",
+          ],
+          offline: [
+            "暂时无法连接服务。",
+            "请检查网络后重试。重复保存前，请先刷新确认是否已经成功。",
+          ],
+          quota: [
+            "体验空间已达到使用上限。",
+            "你仍可以浏览已有内容，需要继续体验时请从首页开始新的体验。",
+          ],
+        }[kind]
+      : [title, message];
   const safeReference =
     reference && /^[A-Za-z0-9_-]{1,64}$/.test(reference)
       ? reference
@@ -53,9 +93,9 @@ export function SystemState({
     <main className="mx-auto grid w-full max-w-2xl gap-5 px-5 py-20">
       <p className="font-semibold">Signal Roadmap /</p>
       <h1 ref={heading} tabIndex={-1} className="font-serif text-3xl">
-        {title}
+        {translated[0]}
       </h1>
-      <p className="max-w-prose text-muted">{message}</p>
+      <p className="max-w-prose text-muted">{translated[1]}</p>
       {safeReference && (
         <p className="break-all text-sm text-muted">
           Reference: {safeReference}
@@ -68,11 +108,11 @@ export function SystemState({
             onClick={retry ?? (() => window.location.reload())}
             className="min-h-11 rounded-sm border border-control px-5 py-2"
           >
-            Try again
+            {locale === "zh" ? "重试" : "Try again"}
           </button>
         )}
         <Link href="/" className="inline-flex min-h-11 items-center underline">
-          Back to home
+          {locale === "zh" ? "返回首页" : "Back to home"}
         </Link>
         {kind === "forbidden" && (
           <Link
@@ -80,7 +120,7 @@ export function SystemState({
             href="/api/auth/signin"
             className="inline-flex min-h-11 items-center underline"
           >
-            Sign in
+            {locale === "zh" ? "登录" : "Sign in"}
           </Link>
         )}
       </div>

@@ -1,7 +1,31 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { feedbackPath } from "./paths";
-export function DemoStart() {
+export function DemoStart({ locale = "en" }: { locale?: "en" | "zh" }) {
+  const copy =
+    locale === "zh"
+      ? {
+          tooMany: "请求过多，请等待",
+          seconds: "秒后重试",
+          tooManyShort: "请求过多，请稍后再试。",
+          failed: "无法创建反馈空间，请检查网络后重试。",
+          ready: "你的反馈空间已准备好。",
+          open: "打开反馈空间",
+          creating: "正在准备空间…",
+          start: "开始体验",
+        }
+      : {
+          tooMany: "Too many requests. Wait",
+          seconds: " seconds before trying again",
+          tooManyShort:
+            "Too many requests. Wait a few minutes before trying again.",
+          failed:
+            "We could not prepare your feedback space. Check your connection and try again shortly.",
+          ready: "Your feedback space is ready.",
+          open: "Open your feedback space",
+          creating: "Preparing your space…",
+          start: "Start exploring",
+        };
   const [pending, setPending] = useState(false);
   const [slug, setSlug] = useState("");
   const [failed, setFailed] = useState("");
@@ -20,8 +44,8 @@ export function DemoStart() {
         const seconds = Number(response.headers.get("Retry-After"));
         setFailed(
           Number.isInteger(seconds) && seconds > 0 && seconds <= 86400
-            ? `Too many demo requests. Wait ${seconds} seconds before trying again.`
-            : "Too many demo requests. Wait a few minutes before trying again.",
+            ? `${copy.tooMany} ${seconds}${copy.seconds}.`
+            : copy.tooManyShort,
         );
         return;
       }
@@ -34,9 +58,7 @@ export function DemoStart() {
         throw new Error("Unavailable");
       setSlug(result.value.slug);
     } catch {
-      setFailed(
-        "Your demo could not be created. Check your connection and try again shortly.",
-      );
+      setFailed(copy.failed);
     } finally {
       setPending(false);
     }
@@ -45,12 +67,12 @@ export function DemoStart() {
     <div className="grid justify-items-start gap-3">
       {slug ? (
         <div role="status" className="grid gap-2">
-          <p>Your private demo is ready.</p>
+          <p>{copy.ready}</p>
           <a
             className="inline-flex min-h-11 items-center rounded-sm bg-action px-5 py-2 font-semibold text-action-foreground"
             href={feedbackPath(slug)}
           >
-            Open your feedback board
+            {copy.open}
           </a>
         </div>
       ) : (
@@ -60,7 +82,7 @@ export function DemoStart() {
           disabled={pending}
           className="min-h-11 rounded-sm bg-action px-5 py-2 font-semibold text-action-foreground disabled:cursor-wait disabled:opacity-60"
         >
-          {pending ? "Creating your demo…" : "Start a private demo"}
+          {pending ? copy.creating : copy.start}
         </button>
       )}
       {failed && (

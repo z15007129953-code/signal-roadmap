@@ -4,13 +4,17 @@ import type {
   NotificationItem,
   NotificationPage,
 } from "@/features/notifications/notification-types";
+import type { Locale } from "@/lib/i18n";
 export function NotificationInbox({
   workspace,
   initial,
+  locale = "en",
 }: {
   workspace: string;
   initial: NotificationPage;
+  locale?: Locale;
 }) {
+  const zh = locale === "zh";
   const [page, setPage] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -26,7 +30,9 @@ export function NotificationInbox({
       const result = await response.json();
       if (!response.ok || !result.ok) {
         setError(
-          "This notification could not be marked as read. Please try again.",
+          zh
+            ? "这条通知无法标记为已读，请重试。"
+            : "This notification could not be marked as read. Please try again.",
         );
         return;
       }
@@ -39,7 +45,9 @@ export function NotificationInbox({
       }));
     } catch {
       setError(
-        "Check your connection and try again. Your unread items have not changed.",
+        zh
+          ? "请检查网络后重试，未读状态没有改变。"
+          : "Check your connection and try again. Your unread items have not changed.",
       );
     } finally {
       setBusy(false);
@@ -55,7 +63,11 @@ export function NotificationInbox({
       );
       const result = await response.json();
       if (!response.ok || !result.ok) {
-        setError("Older updates could not be loaded. Please try again.");
+        setError(
+          zh
+            ? "更早的通知无法加载，请重试。"
+            : "Older updates could not be loaded. Please try again.",
+        );
         return;
       }
       setPage((current) => ({
@@ -69,30 +81,43 @@ export function NotificationInbox({
         ],
       }));
     } catch {
-      setError("Check your connection and try loading updates again.");
+      setError(
+        zh
+          ? "请检查网络后重新加载通知。"
+          : "Check your connection and try loading updates again.",
+      );
     } finally {
       setBusy(false);
     }
   }
   return (
-    <div className="grid max-w-3xl gap-6">
+    <div className="grid max-w-4xl gap-6">
       <p role="status" className="text-muted">
-        {page.unreadCount} unread updates
+        {zh
+          ? `${page.unreadCount} 条未读通知`
+          : `${page.unreadCount} unread updates`}
       </p>
       {page.items.length ? (
-        <ol className="divide-y divide-rule border-y border-rule">
+        <ol className="console-panel divide-y divide-rule px-5">
           {page.items.map((item) => (
             <li
               key={item.id}
-              className="grid gap-3 py-6 sm:grid-cols-[1fr_auto]"
+              className="dense-row grid gap-3 py-6 sm:grid-cols-[1fr_auto]"
             >
               <div className="grid min-w-0 gap-2 [overflow-wrap:anywhere]">
                 <p className="text-sm text-muted">
-                  {item.readAt ? "Read" : "Unread"} ·{" "}
-                  {new Date(item.createdAt).toLocaleDateString("en", {
-                    dateStyle: "medium",
-                    timeZone: "UTC",
-                  })}
+                  {item.readAt
+                    ? zh
+                      ? "已读"
+                      : "Read"
+                    : zh
+                      ? "未读"
+                      : "Unread"}{" "}
+                  ·{" "}
+                  {new Date(item.createdAt).toLocaleDateString(
+                    zh ? "zh-CN" : "en-US",
+                    { dateStyle: "medium", timeZone: "UTC" },
+                  )}
                 </p>
                 <h2 className="text-xl font-semibold">
                   {item.changelogSlug ? (
@@ -121,24 +146,27 @@ export function NotificationInbox({
                   disabled={busy}
                   onClick={() => read(item.id)}
                 >
-                  Mark as read
+                  {zh ? "标记为已读" : "Mark as read"}
                 </button>
               )}
             </li>
           ))}
         </ol>
       ) : (
-        <section className="grid gap-3 py-8">
-          <h2 className="font-serif text-2xl">Your updates will land here.</h2>
+        <section className="console-panel grid gap-3 p-8">
+          <h2 className="text-2xl font-semibold">
+            {zh ? "你的通知会显示在这里。" : "Your updates will land here."}
+          </h2>
           <p className="text-muted">
-            Follow a feedback item to hear when the conversation or its status
-            changes.
+            {zh
+              ? "关注一条反馈后，你会在讨论或状态变化时收到通知。"
+              : "Follow a feedback item to hear when the conversation or its status changes."}
           </p>
           <a
             href={`/${encodeURIComponent(workspace)}/feedback`}
             className="w-fit py-2 underline"
           >
-            Explore feedback
+            {zh ? "浏览反馈" : "Explore feedback"}
           </a>
         </section>
       )}
@@ -148,7 +176,7 @@ export function NotificationInbox({
           disabled={busy}
           onClick={more}
         >
-          Older updates
+          {zh ? "更早的通知" : "Older updates"}
         </button>
       )}
       {error && (

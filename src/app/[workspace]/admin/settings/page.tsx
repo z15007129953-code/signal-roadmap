@@ -6,6 +6,7 @@ import {
   WorkspaceShell,
 } from "@/components/feedback/workspace-shell";
 import { SettingsPanel } from "@/components/settings/settings-panel";
+import { getLocale } from "@/lib/i18n-server";
 export const dynamic = "force-dynamic";
 export default safePage(SettingsPage);
 async function SettingsPage({
@@ -19,6 +20,7 @@ async function SettingsPage({
     return <FeedbackAccessNotice code={context.error.code} />;
   }
   const { actor, workspace, settings } = context.value;
+  const locale = await getLocale();
   const query = await searchParams;
   const snapshot = await settings.get(actor, workspace.id, {
     ...(query.search ? { search: query.search } : {}),
@@ -26,11 +28,15 @@ async function SettingsPage({
   });
   if (!snapshot.ok) return <FeedbackAccessNotice code={snapshot.error.code} />;
   return (
-    <WorkspaceShell workspace={workspace} moderator>
+    <WorkspaceShell workspace={workspace} moderator locale={locale}>
       <div className="mb-8 grid gap-3">
-        <h1 className="font-serif text-3xl">Workspace settings</h1>
+        <h1 className="font-serif text-3xl">
+          {locale === "zh" ? "工作区设置" : "Workspace settings"}
+        </h1>
         <p className="max-w-prose text-muted">
-          Keep your noticeboard organized and make ownership clear.
+          {locale === "zh"
+            ? "整理反馈主题，并明确工作区信息。"
+            : "Keep your feedback organized and your workspace identity clear."}
         </p>
       </div>
       <SettingsPanel

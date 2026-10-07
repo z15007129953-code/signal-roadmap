@@ -6,6 +6,7 @@ import type {
   CommentItem,
   CommentPage,
 } from "@/features/feedback/engagement-types";
+import type { Locale } from "@/lib/i18n";
 const button =
   "min-h-11 rounded-sm border border-control px-3 py-2 text-sm disabled:opacity-60";
 export function CommentThread({
@@ -13,12 +14,15 @@ export function CommentThread({
   feedbackId,
   initial,
   canComment,
+  locale = "en",
 }: {
   workspace: string;
   feedbackId: string;
   initial: CommentPage;
   canComment: boolean;
+  locale?: Locale;
 }) {
+  const zh = locale === "zh";
   const [items, setItems] = useState(initial.items);
   const [cursor, setCursor] = useState(initial.nextCursor);
   const [body, setBody] = useState("");
@@ -64,10 +68,16 @@ export function CommentThread({
       if (!response.ok || !result.ok) {
         setError(
           result.error?.code === "DEMO_QUOTA_EXCEEDED"
-            ? "This demo has reached its comment limit. Your draft is still here."
+            ? zh
+              ? "演示已达到评论上限，草稿仍保留。"
+              : "This demo has reached its comment limit. Your draft is still here."
             : result.error?.code === "DEMO_EXPIRED"
-              ? "This demo has expired. Copy your draft before starting a new demo."
-              : "The comment could not be saved. Your draft is still here; please try again.",
+              ? zh
+                ? "演示已过期，请复制草稿后重新开始。"
+                : "This demo has expired. Copy your draft before starting a new demo."
+              : zh
+                ? "评论未保存，草稿仍保留，请重试。"
+                : "The comment could not be saved. Your draft is still here; please try again.",
         );
         return;
       }
@@ -85,14 +95,22 @@ export function CommentThread({
       setDeleting(null);
       setNotice(
         method === "POST"
-          ? "Comment posted."
+          ? zh
+            ? "评论已发布。"
+            : "Comment posted."
           : method === "PATCH"
-            ? "Comment updated."
-            : "Comment deleted.",
+            ? zh
+              ? "评论已更新。"
+              : "Comment updated."
+            : zh
+              ? "评论已删除。"
+              : "Comment deleted.",
       );
     } catch {
       setError(
-        "Check your connection and try again. Your draft has been kept.",
+        zh
+          ? "请检查网络后重试，草稿已保留。"
+          : "Check your connection and try again. Your draft has been kept.",
       );
     } finally {
       setBusy(false);
@@ -108,7 +126,11 @@ export function CommentThread({
       );
       const result = await response.json();
       if (!response.ok || !result.ok) {
-        setError("More comments could not be loaded. Please try again.");
+        setError(
+          zh
+            ? "更多评论无法加载，请重试。"
+            : "More comments could not be loaded. Please try again.",
+        );
         return;
       }
       const pendingIds = new Set(locallyPosted.current);
@@ -130,7 +152,11 @@ export function CommentThread({
       });
       setCursor(result.value.nextCursor);
     } catch {
-      setError("Check your connection and try loading comments again.");
+      setError(
+        zh
+          ? "请检查网络后重新加载评论。"
+          : "Check your connection and try loading comments again.",
+      );
     } finally {
       setBusy(false);
     }
@@ -141,12 +167,13 @@ export function CommentThread({
       className="mt-10 grid max-w-3xl gap-6"
     >
       <h2 id="discussion-title" className="font-serif text-2xl">
-        Discussion
+        {zh ? "讨论" : "Discussion"}
       </h2>
       {items.length === 0 && (
         <p className="text-muted">
-          No comments yet. Add context, ask a question, or explain how this
-          would help.
+          {zh
+            ? "还没有评论。补充背景、提出问题，或说明这个想法如何帮助你。"
+            : "No comments yet. Add context, ask a question, or explain how this would help."}
         </p>
       )}
       <ol className="divide-y divide-rule">
@@ -169,7 +196,9 @@ export function CommentThread({
               </time>
               {new Date(item.updatedAt).getTime() >
                 new Date(item.createdAt).getTime() && (
-                <span className="text-sm text-muted">Edited</span>
+                <span className="text-sm text-muted">
+                  {zh ? "已编辑" : "Edited"}
+                </span>
               )}
             </div>
             {item.parentId && (
@@ -177,13 +206,15 @@ export function CommentThread({
                 href={`#comment-${item.parentId}`}
                 className="w-fit py-2 text-sm underline"
               >
-                Reply to{" "}
+                {zh ? "回复" : "Reply to"}{" "}
                 {items.find((parent) => parent.id === item.parentId)
-                  ?.authorName ?? "an earlier comment"}
+                  ?.authorName ?? (zh ? "之前的评论" : "an earlier comment")}
               </a>
             )}
             {item.deletedAt ? (
-              <p className="text-muted">Comment removed.</p>
+              <p className="text-muted">
+                {zh ? "评论已删除。" : "Comment removed."}
+              </p>
             ) : editing === item.id ? (
               <form
                 className="grid gap-3"
@@ -196,7 +227,7 @@ export function CommentThread({
                   htmlFor={`edit-${item.id}`}
                   className="text-sm font-medium"
                 >
-                  Edit comment
+                  {zh ? "编辑评论" : "Edit comment"}
                 </label>
                 <textarea
                   id={`edit-${item.id}`}
@@ -209,7 +240,7 @@ export function CommentThread({
                 />
                 <div className="flex flex-wrap gap-3">
                   <button className={button} disabled={busy}>
-                    Save changes
+                    {zh ? "保存更改" : "Save changes"}
                   </button>
                   <button
                     type="button"
@@ -217,7 +248,7 @@ export function CommentThread({
                     disabled={busy}
                     onClick={() => setEditing(null)}
                   >
-                    Cancel editing
+                    {zh ? "取消编辑" : "Cancel editing"}
                   </button>
                 </div>
               </form>
@@ -241,8 +272,9 @@ export function CommentThread({
             {deleting === item.id ? (
               <div className="grid gap-2 border border-rule p-4">
                 <p>
-                  Delete this comment? Its text will be removed, but replies
-                  will stay.
+                  {zh
+                    ? "删除这条评论？评论内容会被移除，但回复会保留。"
+                    : "Delete this comment? Its text will be removed, but replies will stay."}
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <button
@@ -250,14 +282,14 @@ export function CommentThread({
                     disabled={busy}
                     onClick={() => save("DELETE", item.id)}
                   >
-                    Confirm deletion
+                    {zh ? "确认删除" : "Confirm deletion"}
                   </button>
                   <button
                     className={button}
                     disabled={busy}
                     onClick={() => setDeleting(null)}
                   >
-                    Keep comment
+                    {zh ? "保留评论" : "Keep comment"}
                   </button>
                 </div>
               </div>
@@ -272,7 +304,7 @@ export function CommentThread({
                       field.current?.focus();
                     }}
                   >
-                    Reply
+                    {zh ? "回复" : "Reply"}
                   </button>
                 )}
                 {item.canEdit && (
@@ -284,7 +316,7 @@ export function CommentThread({
                       setEditBody(item.body);
                     }}
                   >
-                    Edit
+                    {zh ? "编辑" : "Edit"}
                   </button>
                 )}
                 {item.canDelete && (
@@ -293,7 +325,7 @@ export function CommentThread({
                     disabled={busy}
                     onClick={() => setDeleting(item.id)}
                   >
-                    Delete
+                    {zh ? "删除" : "Delete"}
                   </button>
                 )}
               </div>
@@ -308,7 +340,7 @@ export function CommentThread({
           disabled={busy}
           onClick={loadMore}
         >
-          Load more comments
+          {zh ? "加载更多评论" : "Load more comments"}
         </button>
       )}
       {canComment ? (
@@ -321,19 +353,21 @@ export function CommentThread({
         >
           {replyTo && (
             <div className="flex flex-wrap items-center gap-3">
-              <p>Replying to {replyTo.authorName}</p>
+              <p>
+                {zh ? "正在回复" : "Replying to"} {replyTo.authorName}
+              </p>
               <button
                 type="button"
                 className={button}
                 disabled={busy}
                 onClick={() => setReplyTo(null)}
               >
-                Cancel reply
+                {zh ? "取消回复" : "Cancel reply"}
               </button>
             </div>
           )}
           <label htmlFor="new-comment" className="font-medium">
-            Your comment
+            {zh ? "你的评论" : "Your comment"}
           </label>
           <textarea
             ref={field}
@@ -347,15 +381,26 @@ export function CommentThread({
             aria-describedby="comment-help"
           />
           <p id="comment-help" className="text-sm text-muted">
-            Keep it constructive. Markdown is supported. Do not include private
-            information.
+            {zh
+              ? "请保持建设性，支持 Markdown，请勿包含私人信息。"
+              : "Keep it constructive. Markdown is supported. Do not include private information."}
           </p>
           <button
             type="submit"
             disabled={busy || !body.trim()}
             className="min-h-11 w-fit rounded-sm bg-action px-5 py-2 font-semibold text-action-foreground disabled:opacity-60"
           >
-            {busy ? "Saving…" : replyTo ? "Post reply" : "Post comment"}
+            {busy
+              ? zh
+                ? "正在保存…"
+                : "Saving…"
+              : replyTo
+                ? zh
+                  ? "发布回复"
+                  : "Post reply"
+                : zh
+                  ? "发布评论"
+                  : "Post comment"}
           </button>
         </form>
       ) : (
@@ -364,7 +409,7 @@ export function CommentThread({
           href="/api/auth/signin"
           className="w-fit py-2 underline"
         >
-          Sign in to join the discussion
+          {zh ? "登录后参与讨论" : "Sign in to join the discussion"}
         </Link>
       )}
       {error && (

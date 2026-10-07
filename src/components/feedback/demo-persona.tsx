@@ -1,7 +1,16 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-export function DemoPersona({ role }: { role: "member" | "moderator" }) {
+import type { Locale } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
+export function DemoPersona({
+  role,
+  locale = "en",
+}: {
+  role: "member" | "moderator";
+  locale?: Locale;
+}) {
+  const copy = t(locale);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
@@ -21,15 +30,21 @@ export function DemoPersona({ role }: { role: "member" | "moderator" }) {
       if (!response.ok || !result.ok) {
         setError(
           result.error?.code === "DEMO_EXPIRED"
-            ? "This demo has expired. Start a new demo from the home page."
-            : "The view could not be changed. Try again shortly.",
+            ? locale === "zh"
+              ? "此演示已过期，请从首页重新开始。"
+              : "This demo has expired. Start a new demo from the home page."
+            : locale === "zh"
+              ? "视图切换失败，请稍后重试。"
+              : "The view could not be changed. Try again shortly.",
         );
         return;
       }
       router.refresh();
     } catch {
       setError(
-        "We could not reach the server. Check your connection and try again.",
+        locale === "zh"
+          ? "无法连接服务，请检查网络后重试。"
+          : "We could not reach the server. Check your connection and try again.",
       );
     } finally {
       setBusy(false);
@@ -38,7 +53,10 @@ export function DemoPersona({ role }: { role: "member" | "moderator" }) {
   return (
     <div className="grid gap-2">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <span className="text-sm text-muted">Viewing as {role}</span>
+        <span className="text-sm text-muted">
+          {copy.shell.viewingAs}{" "}
+          {role === "member" ? copy.shell.member : copy.shell.moderator}
+        </span>
         <button
           type="button"
           disabled={busy}
@@ -46,10 +64,10 @@ export function DemoPersona({ role }: { role: "member" | "moderator" }) {
           className="min-h-11 rounded-sm border border-control px-3 py-2 text-sm disabled:opacity-60"
         >
           {busy
-            ? "Changing view…"
+            ? copy.shell.changingView
             : role === "member"
-              ? "Try moderator view"
-              : "Return to member view"}
+              ? copy.shell.tryModeratorView
+              : copy.shell.returnToMemberView}
         </button>
       </div>
       {error && (

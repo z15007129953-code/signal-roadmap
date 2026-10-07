@@ -7,6 +7,7 @@ import type {
   FeedbackStatus,
 } from "@/features/feedback/types";
 import { feedbackPath } from "./paths";
+import { t, type Locale } from "@/lib/i18n";
 
 const statuses: Record<FeedbackStatus, { label: string; className: string }> = {
   under_review: {
@@ -18,17 +19,35 @@ const statuses: Record<FeedbackStatus, { label: string; className: string }> = {
   completed: { label: "Completed", className: "text-status-completed" },
   closed: { label: "Closed", className: "text-status-closed" },
 };
-export function FeedbackStatusLabel({ status }: { status: FeedbackStatus }) {
+export function FeedbackStatusLabel({
+  status,
+  locale = "en",
+}: {
+  status: FeedbackStatus;
+  locale?: Locale;
+}) {
+  const translated = t(locale).status;
+  const label = {
+    under_review: translated.reviewing,
+    planned: translated.planned,
+    in_progress: translated.inProgress,
+    completed: translated.completed,
+    closed: translated.closed,
+  }[status];
   return (
-    <span className={`text-sm font-semibold ${statuses[status].className}`}>
-      {statuses[status].label}
-    </span>
+    <span className={`status-tag ${statuses[status].className}`}>{label}</span>
   );
 }
-function FeedbackDate({ date }: { date: Date }) {
+function FeedbackDate({
+  date,
+  locale = "en",
+}: {
+  date: Date;
+  locale?: Locale;
+}) {
   return (
     <time dateTime={date.toISOString()} className="text-sm text-muted">
-      {new Intl.DateTimeFormat("en", {
+      {new Intl.DateTimeFormat(locale === "zh" ? "zh-CN" : "en-US", {
         dateStyle: "medium",
         timeZone: "UTC",
       }).format(date)}
@@ -40,12 +59,16 @@ export function FeedbackList({
   taxonomy,
   filters,
   page,
+  locale = "en",
 }: {
   workspace: string;
   taxonomy: FeedbackTaxonomy;
   filters: Partial<FeedbackFilters>;
   page: FeedbackPage;
+  locale?: Locale;
 }) {
+  const copy = t(locale);
+  const zh = locale === "zh";
   const path = feedbackPath(workspace);
   const query = new URLSearchParams();
   if (filters.query) query.set("q", filters.query);
@@ -64,27 +87,31 @@ export function FeedbackList({
     <>
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div className="grid gap-2">
-          <p className="text-sm text-muted">Community noticeboard</p>
-          <h1 className="font-serif text-3xl">
-            {filters.visibility === "pending" ? "Awaiting review" : "Feedback"}
+          <p className="console-kicker text-action">
+            {zh ? "反馈 / 收件箱" : "FEEDBACK / INBOX"}
+          </p>
+          <h1 className="text-3xl font-semibold tracking-[-0.03em]">
+            {filters.visibility === "pending"
+              ? copy.status.reviewing
+              : copy.shell.feedback}
           </h1>
         </div>
         <a
           href={`${path}/new`}
           className="inline-flex min-h-11 items-center rounded-sm bg-action px-5 py-2 font-semibold text-action-foreground"
         >
-          Share feedback
+          {zh ? "提交反馈" : "Share feedback"}
         </a>
       </div>
       <form
         action={path}
         method="get"
         role="search"
-        className="mb-8 grid gap-4 border-y border-rule py-5 sm:grid-cols-2 lg:grid-cols-4"
+        className="console-panel mb-8 grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-4"
       >
         <div className="grid gap-1 sm:col-span-2">
           <label htmlFor="search" className="text-sm font-medium">
-            Search feedback
+            {zh ? "搜索反馈" : "Search feedback"}
           </label>
           <input
             id="search"
@@ -97,7 +124,7 @@ export function FeedbackList({
         </div>
         <div className="grid gap-1">
           <label htmlFor="board-filter" className="text-sm font-medium">
-            Board
+            {zh ? "主题" : "Board"}
           </label>
           <select
             id="board-filter"
@@ -105,7 +132,7 @@ export function FeedbackList({
             defaultValue={filters.boardId ?? ""}
             className={control}
           >
-            <option value="">All boards</option>
+            <option value="">{zh ? "全部主题" : "All boards"}</option>
             {taxonomy.boards.map((board) => (
               <option key={board.id} value={board.id}>
                 {board.name}
@@ -115,7 +142,7 @@ export function FeedbackList({
         </div>
         <div className="grid gap-1">
           <label htmlFor="status-filter" className="text-sm font-medium">
-            Status
+            {zh ? "状态" : "Status"}
           </label>
           <select
             id="status-filter"
@@ -123,10 +150,22 @@ export function FeedbackList({
             defaultValue={filters.status ?? ""}
             className={control}
           >
-            <option value="">All statuses</option>
+            <option value="">
+              {locale === "zh" ? "全部状态" : "All statuses"}
+            </option>
             {Object.entries(statuses).map(([value, status]) => (
               <option key={value} value={value}>
-                {status.label}
+                {zh
+                  ? (
+                      {
+                        under_review: "审核中",
+                        planned: "已计划",
+                        in_progress: "进行中",
+                        completed: "已完成",
+                        closed: "已关闭",
+                      } as Record<string, string>
+                    )[value]
+                  : status.label}
               </option>
             ))}
           </select>
@@ -134,7 +173,7 @@ export function FeedbackList({
         {taxonomy.tags.length > 0 && (
           <div className="grid gap-1">
             <label htmlFor="tag-filter" className="text-sm font-medium">
-              Tag
+              {zh ? "标签" : "Tag"}
             </label>
             <select
               id="tag-filter"
@@ -142,7 +181,7 @@ export function FeedbackList({
               defaultValue={filters.tagId ?? ""}
               className={control}
             >
-              <option value="">All tags</option>
+              <option value="">{zh ? "全部标签" : "All tags"}</option>
               {taxonomy.tags.map((tag) => (
                 <option key={tag.id} value={tag.id}>
                   {tag.name}
@@ -159,7 +198,7 @@ export function FeedbackList({
             className="min-h-11 rounded-sm border border-control px-4 py-2 font-medium"
             type="submit"
           >
-            Apply filters
+            {zh ? "应用筛选" : "Apply filters"}
           </button>
           {filtered && (
             <a
@@ -170,7 +209,7 @@ export function FeedbackList({
                   : path
               }
             >
-              Clear filters
+              {zh ? "清除筛选" : "Clear filters"}
             </a>
           )}
         </div>
@@ -180,7 +219,7 @@ export function FeedbackList({
           {page.items.map((item) => (
             <li
               key={item.id}
-              className="grid min-w-0 gap-3 py-6 sm:grid-cols-[minmax(0,1fr)_9rem] sm:gap-8"
+              className="dense-row grid min-w-0 gap-3 py-5 sm:grid-cols-[minmax(0,1fr)_9rem] sm:gap-8"
             >
               <div className="grid min-w-0 gap-2">
                 <h2 className="text-xl leading-snug font-semibold [overflow-wrap:anywhere]">
@@ -191,32 +230,46 @@ export function FeedbackList({
                     {item.title}
                   </a>
                 </h2>
-                <FeedbackDate date={item.createdAt} />
+                <FeedbackDate date={item.createdAt} locale={locale} />
               </div>
               <div className="flex flex-wrap items-start gap-2 sm:flex-col sm:pt-1">
-                <FeedbackStatusLabel status={item.status} />
+                <FeedbackStatusLabel status={item.status} locale={locale} />
                 {item.visibility === "pending" && (
-                  <span className="text-sm text-muted">Not public</span>
+                  <span className="text-sm text-muted">
+                    {zh ? "暂不公开" : "Not public"}
+                  </span>
                 )}
               </div>
             </li>
           ))}
         </ol>
       ) : (
-        <section className="grid gap-3 py-10">
-          <h2 className="font-serif text-2xl">
+        <section className="console-panel grid gap-3 p-8">
+          <h2 className="text-2xl font-semibold">
             {filtered
-              ? "No feedback matches these filters."
+              ? zh
+                ? "没有符合条件的反馈。"
+                : "No feedback matches these filters."
               : filters.visibility === "pending"
-                ? "Nothing awaiting review."
-                : "A good idea starts a conversation."}
+                ? zh
+                  ? "暂无待审核反馈。"
+                  : "Nothing awaiting review."
+                : zh
+                  ? "好的想法，从一次对话开始。"
+                  : "A good idea starts a conversation."}
           </h2>
           <p className="max-w-prose text-muted">
             {filtered
-              ? "Try fewer filters or search with a different phrase."
+              ? zh
+                ? "减少筛选条件，或换个关键词试试。"
+                : "Try fewer filters or search with a different phrase."
               : filters.visibility === "pending"
-                ? "New member submissions will appear here for review."
-                : "This board is ready for its first suggestion. Tell the team what would make your day easier."}
+                ? zh
+                  ? "新的成员反馈会在这里等待审核。"
+                  : "New member submissions will appear here for review."
+                : zh
+                  ? "提交第一条反馈，告诉团队什么可以让你的工作更轻松。"
+                  : "This board is ready for its first suggestion. Tell the team what would make your day easier."}
           </p>
         </section>
       )}
@@ -225,28 +278,38 @@ export function FeedbackList({
           className="mt-6 inline-flex min-h-11 items-center underline"
           href={`${path}?${query}`}
         >
-          Older feedback
+          {zh ? "更早的反馈" : "Older feedback"}
         </a>
       )}
     </>
   );
 }
-export function FeedbackDetail({ item }: { item: FeedbackItem }) {
+export function FeedbackDetail({
+  item,
+  locale = "en",
+}: {
+  item: FeedbackItem;
+  locale?: Locale;
+}) {
+  const zh = locale === "zh";
   return (
-    <article className="grid min-w-0 gap-6">
+    <article className="console-panel grid min-w-0 gap-6 p-6 sm:p-8">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <FeedbackStatusLabel status={item.status} />
-        <FeedbackDate date={item.createdAt} />
+        <FeedbackStatusLabel status={item.status} locale={locale} />
+        <FeedbackDate date={item.createdAt} locale={locale} />
       </div>
       <h1 className="max-w-3xl font-serif text-3xl leading-tight [overflow-wrap:anywhere]">
         {item.title}
       </h1>
       {item.visibility === "pending" && (
-        <aside className="grid gap-1 border border-rule bg-panel-muted p-4">
-          <h2 className="font-semibold">Awaiting review</h2>
+        <aside className="console-panel-muted grid gap-1 p-4">
+          <h2 className="font-semibold">
+            {zh ? "等待审核" : "Awaiting review"}
+          </h2>
           <p className="text-sm">
-            Only the author and workspace moderators can see this feedback. It
-            is not on the public board yet.
+            {zh
+              ? "发布前只有作者和工作区管理员可以查看，暂时不会出现在公开反馈列表中。"
+              : "Only the author and workspace moderators can see this feedback. It is not on the public board yet."}
           </p>
         </aside>
       )}

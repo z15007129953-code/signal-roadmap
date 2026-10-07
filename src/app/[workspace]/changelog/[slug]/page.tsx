@@ -6,6 +6,7 @@ import {
   FeedbackAccessNotice,
 } from "@/components/feedback/workspace-shell";
 import { ChangelogDetail } from "@/components/roadmap/changelog-views";
+import { getLocale } from "@/lib/i18n-server";
 export const dynamic = "force-dynamic";
 export default safePage(ReleasePage);
 async function ReleasePage({
@@ -18,6 +19,7 @@ async function ReleasePage({
     return <FeedbackAccessNotice code={context.error.code} />;
   }
   const { workspace, actor } = context.value;
+  const locale = await getLocale();
   const result = await roadmapServices().changelog.detail(
     actor,
     workspace.id,
@@ -31,14 +33,19 @@ async function ReleasePage({
     <WorkspaceShell
       workspace={workspace}
       moderator={!!actor && actor.role !== "member"}
+      locale={locale}
     >
       <a
         href={`/${encodeURIComponent(workspace.slug)}/changelog`}
         className="mb-6 inline-block py-2 text-sm underline"
       >
-        All releases
+        {locale === "zh" ? "全部更新" : "All releases"}
       </a>
-      <ChangelogDetail workspace={workspace.slug} item={result.value} />
+      <ChangelogDetail
+        workspace={workspace.slug}
+        item={result.value}
+        locale={locale}
+      />
     </WorkspaceShell>
   );
 }

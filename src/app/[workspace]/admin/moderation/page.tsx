@@ -5,6 +5,7 @@ import {
   FeedbackAccessNotice,
 } from "@/components/feedback/workspace-shell";
 import { ModerationQueue } from "@/components/moderation/moderation-queue";
+import { getLocale } from "@/lib/i18n-server";
 export const dynamic = "force-dynamic";
 export default safePage(ModerationPage);
 async function ModerationPage({
@@ -12,6 +13,7 @@ async function ModerationPage({
   searchParams,
 }: PageProps<"/[workspace]/admin/moderation">) {
   const { workspace: slug } = await params;
+  const locale = await getLocale();
   const context = await loadFeedbackContext(slug);
   if (!context.ok) {
     if (context.error.code === "NOT_FOUND") notFound();
@@ -26,8 +28,12 @@ async function ModerationPage({
   });
   if (!result.ok) return <FeedbackAccessNotice code={result.error.code} />;
   return (
-    <WorkspaceShell workspace={workspace} moderator>
-      <ModerationQueue workspace={workspace.slug} page={result.value} />
+    <WorkspaceShell workspace={workspace} moderator locale={locale}>
+      <ModerationQueue
+        workspace={workspace.slug}
+        page={result.value}
+        locale={locale}
+      />
     </WorkspaceShell>
   );
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
+import { getLocale } from "@/lib/i18n-server";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -12,8 +13,9 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   // Every document needs the fresh request CSP nonce, including the home page.
   await connection();
+  const locale = await getLocale();
   return (
-    <html lang="en" className="h-full antialiased">
+    <html lang={locale} className="h-full antialiased">
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

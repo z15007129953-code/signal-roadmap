@@ -12,6 +12,7 @@ import { CommentThread } from "@/components/feedback/comment-thread";
 import { moderationService } from "@/lib/moderation-runtime";
 import { ModerationPanel } from "@/components/moderation/moderation-panel";
 import { MergedHistory } from "@/components/moderation/merged-history";
+import { getLocale } from "@/lib/i18n-server";
 
 export const dynamic = "force-dynamic";
 export default safePage(FeedbackDetailPage);
@@ -26,6 +27,7 @@ async function FeedbackDetailPage({
     return <FeedbackAccessNotice code={context.error.code} />;
   }
   const { workspace, actor, service } = context.value;
+  const locale = await getLocale();
   const moderation = moderationService();
   const redirect = await moderation.redirect(actor, workspace.id, path.slug);
   if (!redirect.ok) return <FeedbackAccessNotice code={redirect.error.code} />;
@@ -54,6 +56,7 @@ async function FeedbackDetailPage({
           item={detail.value}
           taxonomy={taxonomy.value}
           tagIds={selection.value.tagIds}
+          locale={locale}
         />
       );
   }
@@ -72,6 +75,7 @@ async function FeedbackDetailPage({
             feedbackId={detail.value.id}
             initial={state.value}
             canEngage={!!actor}
+            locale={locale}
           />
           <CommentThread
             key={`comments-${actor?.memberId ?? "public"}`}
@@ -79,11 +83,14 @@ async function FeedbackDetailPage({
             feedbackId={detail.value.id}
             initial={comments.value}
             canComment={!!actor}
+            locale={locale}
           />
         </>
       ) : (
         <p className="mt-8 text-muted">
-          Discussion is not available for this feedback.
+          {locale === "zh"
+            ? "这条反馈暂时没有讨论内容。"
+            : "Discussion is not available for this feedback."}
         </p>
       );
     const search = await searchParams;
@@ -97,11 +104,13 @@ async function FeedbackDetailPage({
       <MergedHistory
         page={history.value}
         detailPath={`${feedbackPath(workspace.slug)}/${encodeURIComponent(path.slug)}`}
+        locale={locale}
       />
     ) : (
       <p className="mt-8 text-muted">
-        Earlier conversations could not be loaded. Return to this feedback
-        without the history filter and try again.
+        {locale === "zh"
+          ? "之前的讨论暂时无法加载，请返回反馈详情后重试。"
+          : "Earlier conversations could not be loaded. Return to this feedback without the history filter and try again."}
       </p>
     );
   }
@@ -109,14 +118,15 @@ async function FeedbackDetailPage({
     <WorkspaceShell
       workspace={workspace}
       moderator={!!actor && actor.role !== "member"}
+      locale={locale}
     >
       <a
         href={feedbackPath(workspace.slug)}
         className="mb-6 inline-block py-2 text-sm underline"
       >
-        Back to feedback
+        {locale === "zh" ? "返回反馈" : "Back to feedback"}
       </a>
-      <FeedbackDetail item={detail.value} />
+      <FeedbackDetail item={detail.value} locale={locale} />
       {moderatorTools}
       {discussion}
       {earlierConversations}

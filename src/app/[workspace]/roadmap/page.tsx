@@ -10,6 +10,7 @@ import {
   roadmapLabels,
 } from "@/components/roadmap/roadmap-board";
 import type { FeedbackStatus, FeedbackPage } from "@/features/feedback/types";
+import { getLocale } from "@/lib/i18n-server";
 export const dynamic = "force-dynamic";
 export default safePage(RoadmapPage);
 async function RoadmapPage({
@@ -23,6 +24,7 @@ async function RoadmapPage({
     return <FeedbackAccessNotice code={context.error.code} />;
   }
   const { workspace, actor } = context.value;
+  const locale = await getLocale();
   const query = await searchParams;
   const statuses = Object.keys(roadmapLabels) as FeedbackStatus[];
   if (
@@ -63,16 +65,26 @@ async function RoadmapPage({
     <WorkspaceShell
       workspace={workspace}
       moderator={!!actor && actor.role !== "member"}
+      locale={locale}
     >
       <div className="mb-10 grid gap-3">
-        <p className="text-sm text-muted">Ideas in motion</p>
-        <h1 className="font-serif text-3xl">Roadmap</h1>
+        <p className="text-sm text-muted">
+          {locale === "zh" ? "反馈 / 进展" : "FEEDBACK / PROGRESS"}
+        </p>
+        <h1 className="font-serif text-3xl">
+          {locale === "zh" ? "路线图" : "Roadmap"}
+        </h1>
         <p className="max-w-prose text-muted">
-          See what is being considered, what is underway, and what has shipped.
-          Plans can change as the team learns.
+          {locale === "zh"
+            ? "查看正在考虑、进行中和已经完成的工作。计划会随着新信息持续调整。"
+            : "See what is being considered, what is underway, and what has shipped. Plans can change as the team learns."}
         </p>
       </div>
-      <RoadmapBoard workspace={workspace.slug} columns={columns} />
+      <RoadmapBoard
+        workspace={workspace.slug}
+        columns={columns}
+        locale={locale}
+      />
     </WorkspaceShell>
   );
 }

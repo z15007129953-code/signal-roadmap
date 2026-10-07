@@ -7,6 +7,7 @@ import {
 } from "@/components/feedback/workspace-shell";
 import { ChangelogList } from "@/components/roadmap/changelog-views";
 import { ChangelogEditor } from "@/components/roadmap/changelog-editor";
+import { getLocale } from "@/lib/i18n-server";
 export const dynamic = "force-dynamic";
 export default safePage(ReleaseAdminPage);
 async function ReleaseAdminPage({
@@ -20,6 +21,7 @@ async function ReleaseAdminPage({
     return <FeedbackAccessNotice code={context.error.code} />;
   }
   const { workspace, actor } = context.value;
+  const locale = await getLocale();
   const search = await searchParams;
   const { changelog } = roadmapServices();
   const completed = await changelog.completed(actor, workspace.id);
@@ -40,16 +42,22 @@ async function ReleaseAdminPage({
   });
   if (!drafts.ok) return <FeedbackAccessNotice code={drafts.error.code} />;
   return (
-    <WorkspaceShell workspace={workspace} moderator>
+    <WorkspaceShell workspace={workspace} moderator locale={locale}>
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <h1 className="font-serif text-3xl">
-          {entry ? "Edit release" : "Write a release"}
+          {entry
+            ? locale === "zh"
+              ? "编辑版本更新"
+              : "Edit release"
+            : locale === "zh"
+              ? "撰写版本更新"
+              : "Write a release"}
         </h1>
         <a
           href={`/${encodeURIComponent(workspace.slug)}/changelog`}
           className="py-2 underline"
         >
-          Published releases
+          {locale === "zh" ? "已发布更新" : "Published releases"}
         </a>
       </div>
       <ChangelogEditor
@@ -59,8 +67,15 @@ async function ReleaseAdminPage({
         completed={completed.value}
       />
       <section className="mt-16 grid gap-5">
-        <h2 className="font-serif text-2xl">Saved drafts</h2>
-        <ChangelogList workspace={workspace.slug} page={drafts.value} draft />
+        <h2 className="font-serif text-2xl">
+          {locale === "zh" ? "已保存草稿" : "Saved drafts"}
+        </h2>
+        <ChangelogList
+          workspace={workspace.slug}
+          page={drafts.value}
+          draft
+          locale={locale}
+        />
       </section>
     </WorkspaceShell>
   );

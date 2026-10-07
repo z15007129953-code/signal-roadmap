@@ -6,6 +6,7 @@ import {
   WorkspaceShell,
   FeedbackAccessNotice,
 } from "@/components/feedback/workspace-shell";
+import { getLocale } from "@/lib/i18n-server";
 
 export const dynamic = "force-dynamic";
 export default safePage(FeedbackPage);
@@ -20,6 +21,7 @@ async function FeedbackPage({
     return <FeedbackAccessNotice code={context.error.code} />;
   }
   const { workspace, actor, service } = context.value;
+  const locale = await getLocale();
   const search = await searchParams;
   const raw: Record<string, unknown> = {};
   for (const key of ["boardId", "tagId", "status", "cursor", "visibility"])
@@ -37,12 +39,14 @@ async function FeedbackPage({
     <WorkspaceShell
       workspace={workspace}
       moderator={!!actor && actor.role !== "member"}
+      locale={locale}
     >
       <FeedbackList
         workspace={workspace.slug}
         taxonomy={taxonomy.value}
         filters={parsed.data}
         page={list.value}
+        locale={locale}
       />
     </WorkspaceShell>
   );

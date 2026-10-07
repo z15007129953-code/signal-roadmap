@@ -14,9 +14,9 @@ export function createDemoRepository(db: Database): DemoRepository {
         await tx.insert(workspaces).values({
           id,
           slug,
-          name: "Your community sandbox",
+          name: "Feedback workspace",
           description:
-            "An isolated space to try Signal Roadmap. This demo expires in 24 hours.",
+            "A private place to share ideas, follow progress, and see what happens next.",
           isDemo: true,
         });
         const [session] = await tx

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { FeedbackItem, FeedbackTaxonomy } from "@/features/feedback/types";
 import { feedbackPath } from "./paths";
+import { type Locale } from "@/lib/i18n";
 
 const control =
   "min-h-11 w-full rounded-sm border border-control bg-panel px-3 py-2";
@@ -24,10 +25,49 @@ const failureMessages: Record<string, string> = {
 export function FeedbackForm({
   workspace,
   taxonomy,
+  locale = "en",
 }: {
   workspace: string;
   taxonomy: FeedbackTaxonomy;
+  locale?: Locale;
 }) {
+  const zh = locale === "zh";
+  const fieldCopy = zh
+    ? {
+        title: "标题",
+        description: "描述",
+        board: "主题",
+        tags: "标签",
+        optional: "可选",
+        noBoard: "暂无可用主题",
+      }
+    : {
+        title: "Title",
+        description: "Description",
+        board: "Board",
+        tags: "Tags",
+        optional: "optional",
+        noBoard: "No boards available",
+      };
+  const localizedFailure = (code?: string) => {
+    if (!zh)
+      return (
+        failureMessages[code ?? ""] ??
+        "Your feedback could not be saved. Your draft is still here; try again shortly."
+      );
+    return (
+      (
+        {
+          DEMO_QUOTA_EXCEEDED: "演示已达到使用上限，请保存草稿后重新开始。",
+          DEMO_EXPIRED: "演示已过期，请保存草稿后重新开始。",
+          UNAUTHENTICATED: "登录状态已失效，请重新登录。",
+          FORBIDDEN: "当前账号无法向这个工作区提交反馈。",
+          RATE_LIMITED: "请求过于频繁，请稍后再试。",
+          VALIDATION_FAILED: "请检查标题、描述、主题和标签。",
+        } as Record<string, string>
+      )[code ?? ""] ?? "反馈未保存，草稿仍保留，请稍后重试。"
+    );
+  };
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [boardId, setBoardId] = useState(taxonomy.boards[0]?.id ?? "");
@@ -57,12 +97,17 @@ export function FeedbackForm({
     if (sending) return;
     const next: Partial<Record<Field, string>> = {};
     if (title.trim().length < 5 || title.trim().length > 140)
-      next.title = "Title needs 5–140 characters.";
+      next.title = zh
+        ? "标题需要 5–140 个字符。"
+        : "Title needs 5–140 characters.";
     if (description.trim().length < 10 || description.trim().length > 10000)
-      next.description = "Description needs 10–10,000 characters.";
+      next.description = zh
+        ? "描述需要 10–10,000 个字符。"
+        : "Description needs 10–10,000 characters.";
     if (!taxonomy.boards.some((board) => board.id === boardId))
-      next.boardId = "Choose an available board.";
-    if (tagIds.length > 5) next.tagIds = "Choose no more than 5 tags.";
+      next.boardId = zh ? "请选择一个可用主题。" : "Choose an available board.";
+    if (tagIds.length > 5)
+      next.tagIds = zh ? "最多选择 5 个标签。" : "Choose no more than 5 tags.";
     setErrors(next);
     setFailure("");
     if (Object.keys(next).length) return;
@@ -84,14 +129,12 @@ export function FeedbackForm({
       const result = await response.json();
       if (response.ok && result.ok && typeof result.value?.slug === "string")
         setSaved(result.value);
-      else
-        setFailure(
-          failureMessages[result.error?.code] ??
-            "Your feedback could not be saved. Your draft is still here; try again shortly.",
-        );
+      else setFailure(localizedFailure(result.error?.code));
     } catch {
       setFailure(
-        "We could not reach the server. Your draft is still here; check your connection and try again.",
+        zh
+          ? "无法连接服务，草稿仍保留，请检查网络后重试。"
+          : "We could not reach the server. Your draft is still here; check your connection and try again.",
       );
     } finally {
       setSending(false);
@@ -102,7 +145,9 @@ export function FeedbackForm({
     const searchedTitle = title;
     setFinding(true);
     setSuggestions([]);
-    setSuggestionState("Looking for similar feedback…");
+    setSuggestionState(
+      zh ? "正在查找相似反馈…" : "Looking for similar feedback…",
+    );
     try {
       const response = await fetch(
         `/api/workspaces/${encodeURIComponent(workspace)}/feedback/suggestions?title=${encodeURIComponent(title)}`,
@@ -115,13 +160,19 @@ export function FeedbackForm({
       setSuggestions(result.value.slice(0, 3));
       setSuggestionState(
         result.value.length
-          ? "Related feedback — take a look before adding yours."
-          : "No similar titles found. Your perspective is welcome.",
+          ? zh
+            ? "发现相似反馈，提交前可以先看看。"
+            : "Related feedback — take a look before adding yours."
+          : zh
+            ? "没有找到相似标题，可以继续提交。"
+            : "No similar titles found. Your perspective is welcome.",
       );
     } catch {
       if (latestTitle.current === searchedTitle)
         setSuggestionState(
-          "Similar feedback is unavailable. You can still send your idea.",
+          zh
+            ? "暂时无法查找相似反馈，你仍然可以提交。"
+            : "Similar feedback is unavailable. You can still send your idea.",
         );
     } finally {
       setFinding(false);
@@ -138,19 +189,27 @@ export function FeedbackForm({
       >
         <h2 className="font-serif text-2xl">
           {saved.visibility === "pending"
-            ? "Your feedback is awaiting review."
-            : "Your feedback is published."}
+            ? zh
+              ? "你的反馈正在等待审核。"
+              : "Your feedback is awaiting review."
+            : zh
+              ? "你的反馈已发布。"
+              : "Your feedback is published."}
         </h2>
         <p className="max-w-prose text-muted">
           {saved.visibility === "pending"
-            ? "Only you and this workspace’s moderators can see it until it is published."
-            : "It is now available on this workspace’s feedback board."}
+            ? zh
+              ? "发布前只有你和工作区管理员可以查看。"
+              : "Only you and this workspace’s moderators can see it until it is published."
+            : zh
+              ? "现在已经可以在反馈面板中查看。"
+              : "It is now available on this workspace’s feedback board."}
         </p>
         <a
           className="w-fit py-2 font-medium underline"
           href={`${feedbackPath(workspace)}/${encodeURIComponent(saved.slug)}`}
         >
-          View your feedback
+          {zh ? "查看你的反馈" : "View your feedback"}
         </a>
       </div>
     );
@@ -165,7 +224,13 @@ export function FeedbackForm({
           className="grid gap-2 rounded-sm border border-critical p-4"
         >
           <h2 className="font-semibold">
-            {failure ? "Feedback was not sent" : "Check these fields"}
+            {failure
+              ? zh
+                ? "反馈未发送"
+                : "Feedback was not sent"
+              : zh
+                ? "请检查填写内容"
+                : "Check these fields"}
           </h2>
           {failure && <p>{failure}</p>}
           {Object.entries(errors).map(([field, message]) => (
@@ -178,10 +243,12 @@ export function FeedbackForm({
       <fieldset disabled={sending} className="grid min-w-0 gap-6">
         <div className="grid gap-2">
           <label htmlFor="title" className="font-semibold">
-            Title
+            {fieldCopy.title}
           </label>
           <p id="title-hint" className="text-sm text-muted">
-            One clear idea in 5–140 characters.
+            {zh
+              ? "用一句话清楚描述你的想法（5–140 个字符）。"
+              : "One clear idea in 5–140 characters."}
           </p>
           <input
             id="title"
@@ -209,7 +276,13 @@ export function FeedbackForm({
             disabled={finding || title.trim().length < 3}
             className="min-h-11 w-fit text-sm underline disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {finding ? "Finding similar feedback…" : "Find similar feedback"}
+            {finding
+              ? zh
+                ? "正在查找相似反馈…"
+                : "Finding similar feedback…"
+              : zh
+                ? "查找相似反馈"
+                : "Find similar feedback"}
           </button>
           {suggestionState && (
             <p role="status" className="text-sm text-muted">
@@ -228,7 +301,7 @@ export function FeedbackForm({
                   >
                     {item.title}{" "}
                     <span className="text-sm text-muted">
-                      (opens a new tab)
+                      ({zh ? "在新标签页打开" : "opens in a new tab"})
                     </span>
                   </a>
                 </li>
@@ -238,11 +311,12 @@ export function FeedbackForm({
         </div>
         <div className="grid gap-2">
           <label htmlFor="description" className="font-semibold">
-            Description
+            {fieldCopy.description}
           </label>
           <p id="description-hint" className="text-sm text-muted">
-            What are you trying to do, and what would help? 10–10,000
-            characters. Markdown is supported; HTML and embedded images are not.
+            {zh
+              ? "你想完成什么？什么可以帮助你？支持 Markdown，长度为 10–10,000 个字符。"
+              : "What are you trying to do, and what would help? 10–10,000 characters. Markdown is supported; HTML and embedded images are not."}
           </p>
           <textarea
             id="description"
@@ -264,7 +338,7 @@ export function FeedbackForm({
         </div>
         <div className="grid gap-2">
           <label htmlFor="boardId" className="font-semibold">
-            Board
+            {fieldCopy.board}
           </label>
           <select
             id="boardId"
@@ -277,7 +351,7 @@ export function FeedbackForm({
             className={control}
           >
             {!taxonomy.boards.length && (
-              <option value="">No boards available</option>
+              <option value="">{fieldCopy.noBoard}</option>
             )}
             {taxonomy.boards.map((board) => (
               <option key={board.id} value={board.id}>
@@ -298,10 +372,13 @@ export function FeedbackForm({
             aria-describedby={errors.tagIds ? "tagIds-error" : "tags-hint"}
           >
             <legend className="font-semibold">
-              Tags <span className="font-normal text-muted">(optional)</span>
+              {fieldCopy.tags}{" "}
+              <span className="font-normal text-muted">
+                ({fieldCopy.optional})
+              </span>
             </legend>
             <p id="tags-hint" className="text-sm text-muted">
-              Choose up to 5.
+              {zh ? "最多选择 5 个。" : "Choose up to 5."}
             </p>
             <div className="mt-2 flex flex-wrap gap-x-6">
               {taxonomy.tags.map((tag) => (
@@ -339,13 +416,19 @@ export function FeedbackForm({
             type="submit"
             className="min-h-11 rounded-sm bg-action px-5 py-2 font-semibold text-action-foreground disabled:cursor-wait disabled:opacity-60"
           >
-            {sending ? "Sending feedback…" : "Send feedback"}
+            {sending
+              ? zh
+                ? "正在发送反馈…"
+                : "Sending feedback…"
+              : zh
+                ? "发送反馈"
+                : "Send feedback"}
           </button>
           <a
             className="py-2 text-muted underline"
             href={feedbackPath(workspace)}
           >
-            Back to feedback
+            {zh ? "返回反馈列表" : "Back to feedback"}
           </a>
         </div>
       </fieldset>
